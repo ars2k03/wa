@@ -21,21 +21,30 @@ export class WhatsappController {
     const apiKeyUserId = req.apiKeyRecord?.userId;
     let targetSessionId = req.sessionId;
 
-    if (!targetSessionId && body.sessionId) {
-      if (apiKeyUserId) {
-        const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
-          where: { sessionId: body.sessionId },
-        });
-        if (sessionRecord && sessionRecord.userId !== apiKeyUserId) {
-          throw new ForbiddenException(
-            `You do not have permission to dispatch messages via session "${body.sessionId}"`,
-          );
+    if (!targetSessionId) {
+      if (body.sessionId) {
+        if (apiKeyUserId) {
+          const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
+            where: { sessionId: body.sessionId },
+          });
+          if (sessionRecord && sessionRecord.userId !== apiKeyUserId) {
+            throw new ForbiddenException(
+              `You do not have permission to dispatch messages via session "${body.sessionId}"`,
+            );
+          }
         }
+        targetSessionId = body.sessionId;
+      } else if (apiKeyUserId) {
+        // Automatically find user's connected single device session
+        const userSession = await this.prisma.whatsAppSessionRecord.findFirst({
+          where: { userId: apiKeyUserId, status: 'connected' },
+          orderBy: { updatedAt: 'desc' },
+        });
+        targetSessionId = userSession?.sessionId || `user_${apiKeyUserId}`;
+      } else {
+        targetSessionId = 'default';
       }
-      targetSessionId = body.sessionId;
     }
-
-    targetSessionId = targetSessionId || 'default';
 
     const result = await this.whatsappService.sendOtpCode(body, targetSessionId, apiKeyUserId);
 

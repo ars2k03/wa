@@ -115,6 +115,39 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Resolves the session identifier for a user.
+   * If sessionId is 'default' or 'me', maps to the user's specific session (1 account = 1 WhatsApp).
+   */
+  async resolveSessionId(sessionId?: string, userId?: string): Promise<string> {
+    if (!userId) {
+      return sessionId || this.defaultSessionId;
+    }
+
+    if (sessionId && sessionId !== 'default' && sessionId !== 'me') {
+      return sessionId;
+    }
+
+    // Check existing in DB
+    const existingDb = await this.prisma.whatsAppSessionRecord.findFirst({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      select: { sessionId: true },
+    });
+    if (existingDb) {
+      return existingDb.sessionId;
+    }
+
+    // Check in-memory
+    for (const [sId, s] of this.sessions.entries()) {
+      if (s.userId === userId) {
+        return sId;
+      }
+    }
+
+    return `user_${userId}`;
+  }
+
+  /**
    * Prevents IDOR by verifying that the requesting user owns the session
    */
   async verifySessionOwnership(sessionId: string, userId?: string): Promise<void> {
@@ -148,6 +181,8 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     body?: InitSessionDto | string,
   ): Promise<SessionInfo> {
     const userId = typeof body === 'object' && body ? body.userId : body;
+    const resolvedSessionId = await this.resolveSessionId(sessionId, userId);
+    sessionId = resolvedSessionId;
 
     // Prevent IDOR: Check ownership before initializing or reusing an existing session
     if (userId) {
@@ -303,6 +338,9 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     body: PairingCodeDto | string,
     userId?: string,
   ): Promise<string> {
+    const resolvedSessionId = await this.resolveSessionId(sessionId, userId);
+    sessionId = resolvedSessionId;
+
     if (userId) {
       await this.verifySessionOwnership(sessionId, userId);
     }
@@ -334,6 +372,9 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     sessionId: string = this.defaultSessionId,
     userId?: string,
   ): Promise<SessionInfo> {
+    const resolvedSessionId = await this.resolveSessionId(sessionId, userId);
+    sessionId = resolvedSessionId;
+
     if (userId) {
       await this.verifySessionOwnership(sessionId, userId);
     }
@@ -381,6 +422,9 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
   }
 
   async deleteSession(sessionId: string, userId?: string): Promise<void> {
+    const resolvedSessionId = await this.resolveSessionId(sessionId, userId);
+    sessionId = resolvedSessionId;
+
     if (userId) {
       await this.verifySessionOwnership(sessionId, userId);
     }
@@ -419,7 +463,19 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     sessionId: string = this.defaultSessionId,
     userId?: string,
   ): WASocket {
-    const session = this.sessions.get(sessionId);
+    let targetSessionId = sessionId;
+    let session = this.sessions.get(targetSessionId);
+
+    // If session not found by exact ID, find the single session for this user
+    if (!session && userId) {
+      for (const s of this.sessions.values()) {
+        if (s.userId === userId && s.status === 'connected') {
+          session = s;
+          targetSessionId = s.sessionId;
+          break;
+        }
+      }
+    }
 
     if (userId && session?.userId && session.userId !== userId) {
       throw new ForbiddenException(
@@ -431,7 +487,7 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
 
     if (!socket?.user || session?.status !== 'connected') {
       throw new ServiceUnavailableException(
-        `WhatsApp session "${sessionId}" is not connected. Please scan QR first.`,
+        `WhatsApp session "${targetSessionId}" is not connected. Please scan QR first.`,
       );
     }
 
