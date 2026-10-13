@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
-import type { SessionInfo, WhatsAppConnectionStatus } from '@/lib/types';
+import type { SessionInfo, WhatsAppConnectionStatus } from '@/types/types';
 
 export function useWhatsAppSession(initialSessionId: string = 'default') {
   const [sessionId, setSessionId] = useState<string>(initialSessionId);
@@ -70,11 +70,11 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
       setSessionInfo((prev) =>
         prev
           ? {
-              ...prev,
-              status: 'disconnected' as WhatsAppConnectionStatus,
-              qr: null,
-              qrRaw: null,
-            }
+            ...prev,
+            status: 'disconnected' as WhatsAppConnectionStatus,
+            qr: null,
+            qrRaw: null,
+          }
           : null,
       );
       setPairingCode(null);

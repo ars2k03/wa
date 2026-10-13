@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useMessageLogs } from '@/hooks/useMessageLogs';
-import { formatDate } from '@/lib/utils';
+import { formatDate } from '@/utils/utils';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';

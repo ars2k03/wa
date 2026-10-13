@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import type { ApiKey } from '@/lib/types';
+import type { ApiKey } from '@/types/types';
 
 export function useApiKeys(userId?: string | null) {
   const [keys, setKeys] = useState<ApiKey[]>([]);

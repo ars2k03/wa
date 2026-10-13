@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { copyToClipboard, formatDate, formatTimeAgo, maskApiKey } from '@/lib/utils';
-import type { ApiKey } from '@/lib/types';
+import { copyToClipboard, formatDate, formatTimeAgo, maskApiKey } from '@/utils/utils';
+import type { ApiKey } from '@/types/types';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -158,9 +158,8 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
                 {keys.map((k) => (
                   <tr
                     key={k.id}
-                    className={`hover:bg-[#f4efe2] transition-colors ${
-                      !k.isActive ? 'opacity-60 bg-[#fae8e8]/20' : ''
-                    }`}
+                    className={`hover:bg-[#f4efe2] transition-colors ${!k.isActive ? 'opacity-60 bg-[#fae8e8]/20' : ''
+                      }`}
                   >
                     <td className="p-3 border-r border-[#1a1a1a] font-bold text-[#1a1a1a]">
                       {k.name}

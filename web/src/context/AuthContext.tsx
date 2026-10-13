@@ -8,7 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { api } from '@/lib/api';
-import type { User } from '@/lib/types';
+import type { User } from '@/types/types';
 
 interface AuthContextType {
   user: User | null;

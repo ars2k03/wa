@@ -3,9 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { Navbar } from '@/components/common/Navbar';
-import { Footer } from '@/components/common/Footer';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 
 function EyeIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -225,14 +223,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center">
-        <Suspense fallback={<div className="p-12 text-center font-mono">Loading sign in...</div>}>
-          <LoginForm />
-        </Suspense>
-      </main>
-      <Footer />
-    </div>
+    <Suspense fallback={<div className="p-12 text-center font-mono">Loading sign in...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

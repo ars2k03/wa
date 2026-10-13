@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import type { SendOtpResult } from '@/lib/types';
+import type { SendOtpResult } from '@/types/types';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import type { MessageLog } from '@/lib/types';
+import type { MessageLog } from '@/types/types';
 
 export function useMessageLogs(sessionId?: string, autoRefresh: boolean = true) {
   const [logs, setLogs] = useState<MessageLog[]>([]);

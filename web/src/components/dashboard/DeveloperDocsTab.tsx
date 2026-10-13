@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard } from '@/utils/utils';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
@@ -78,7 +78,7 @@ export function DeveloperDocsTab() {
                 REQUEST BODY JSON:
               </div>
               <pre className="bg-[#1a1a1a] text-[#fbf8f1] border border-[#1a1a1a] p-3 font-mono text-xs overflow-x-auto">
-{`{
+                {`{
   "phoneNumber": "+8801700000000",   // Target phone number with country code
   "otp": "940214",                   // 4-8 digit numeric or alphanumeric code
   "sessionId": "default"             // Optional, defaults to key's linked session
@@ -110,7 +110,7 @@ export function DeveloperDocsTab() {
                 SUCCESSFUL RESPONSE (200 OK):
               </div>
               <pre className="bg-[#f4efe2] border border-[#1a1a1a] p-3 font-mono text-xs text-[#1a1a1a] overflow-x-auto">
-{`{
+                {`{
   "statusCode": 200,
   "success": true,
   "message": "OTP sent successfully",

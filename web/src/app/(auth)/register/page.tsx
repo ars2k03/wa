@@ -3,9 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { Navbar } from '@/components/common/Navbar';
-import { Footer } from '@/components/common/Footer';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 
 function EyeIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -241,13 +239,5 @@ function RegisterForm() {
 }
 
 export default function RegisterPage() {
-  return (
-    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center">
-        <RegisterForm />
-      </main>
-      <Footer />
-    </div>
-  );
+  return <RegisterForm />;
 }

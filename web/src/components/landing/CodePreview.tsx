@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard } from '@/utils/utils';
 import { Button } from '../ui/Button';
 
 function getSnippets(baseUrl: string): Record<string, { label: string; code: string }> {
@@ -145,11 +145,10 @@ export function CodePreview() {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider border-2 transition-all cursor-pointer ${
-                    activeTab === key
+                  className={`px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider border-2 transition-all cursor-pointer ${activeTab === key
                       ? 'bg-[#fbf8f1] text-[#1a1a1a] border-[#fbf8f1] shadow-[2px_2px_0px_#7a2020]'
                       : 'bg-transparent text-[#d4d4d4] border-transparent hover:border-[#524d43]'
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </button>

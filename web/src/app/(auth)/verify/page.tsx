@@ -3,9 +3,6 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AuthProvider } from '@/context/AuthContext';
-import { Navbar } from '@/components/common/Navbar';
-import { Footer } from '@/components/common/Footer';
 import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
 
@@ -268,14 +265,8 @@ function VerifyForm() {
 
 export default function VerifyPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center">
-        <Suspense fallback={<div className="p-12 text-center font-mono">Loading verification...</div>}>
-          <VerifyForm />
-        </Suspense>
-      </main>
-      <Footer />
-    </div>
+    <Suspense fallback={<div className="p-12 text-center font-mono">Loading verification...</div>}>
+      <VerifyForm />
+    </Suspense>
   );
 }

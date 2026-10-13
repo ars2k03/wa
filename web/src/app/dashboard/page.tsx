@@ -4,10 +4,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Navbar } from '@/components/common/Navbar';
-import { Footer } from '@/components/common/Footer';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+
 import { DeviceConnectTab } from '@/components/dashboard/DeviceConnectTab';
 import { ApiKeyManagerTab } from '@/components/dashboard/ApiKeyManagerTab';
 import { MessageTesterTab } from '@/components/dashboard/MessageTesterTab';
@@ -158,13 +156,5 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
-  return (
-    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-      <Navbar />
-      <main className="flex-1">
-        <DashboardContent />
-      </main>
-      <Footer />
-    </div>
-  );
+  return <DashboardContent />;
 }
