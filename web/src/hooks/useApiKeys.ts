@@ -27,12 +27,11 @@ export function useApiKeys(userId?: string | null) {
 
   const createKey = useCallback(
     async (name: string, sessionId?: string) => {
-      if (!userId) throw new Error('User ID is required to generate API key');
       setLoading(true);
       setError(null);
       try {
         const res = await api.createApiKey({
-          userId,
+          userId: userId || undefined,
           name,
           sessionId,
         });
@@ -51,6 +50,18 @@ export function useApiKeys(userId?: string | null) {
     },
     [userId],
   );
+
+  const deleteKey = useCallback(async (keyId: string) => {
+    try {
+      const res = await api.deleteApiKey(keyId);
+      if (res.success) {
+        setKeys((prev) => prev.filter((k) => k.id !== keyId));
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to delete key');
+      throw err;
+    }
+  }, []);
 
   const linkSession = useCallback(
     async (keyId: string, sessionId: string) => {
@@ -95,6 +106,7 @@ export function useApiKeys(userId?: string | null) {
     loading,
     error,
     createKey,
+    deleteKey,
     linkSession,
     revokeKey,
     refreshKeys: fetchKeys,

@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import type { SessionInfo, WhatsAppConnectionStatus } from '@/types/types';
 
+// Poll fast while the user is mid-link so the result shows up quickly; slow down otherwise
+const FAST_POLL_MS = 1500;
+const SLOW_POLL_MS = 5000;
+
 export function useWhatsAppSession(initialSessionId: string = 'default') {
   const [sessionId, setSessionId] = useState<string>(initialSessionId);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
@@ -11,20 +15,25 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
   const [error, setError] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairingLoading, setPairingLoading] = useState<boolean>(false);
+  const [hasFetchedInitialStatus, setHasFetchedInitialStatus] = useState<boolean>(false);
 
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchStatus = useCallback(async (): Promise<WhatsAppConnectionStatus | undefined> => {
     try {
       const res = await api.getSessionStatus(sessionId);
       if (res.success && res.data) {
         setSessionInfo(res.data);
         setError(null);
+        return res.data.status;
       }
     } catch (err: any) {
       // Session might not be initialized yet
       setError(err?.message || 'Failed to fetch session status');
+    } finally {
+      setHasFetchedInitialStatus(true);
     }
+    return undefined;
   }, [sessionId]);
 
   const initSession = useCallback(
@@ -74,6 +83,10 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
             status: 'disconnected' as WhatsAppConnectionStatus,
             qr: null,
             qrRaw: null,
+            linking: false,
+            qrRefreshing: false,
+            qrExpired: false,
+            lastError: null,
           }
           : null,
       );
@@ -85,17 +98,23 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
     }
   }, [sessionId]);
 
-  // Polling loop: poll every 2500ms
+  // Polling loop: chained timeouts so requests never overlap, with an adaptive interval
   useEffect(() => {
-    fetchStatus();
+    let cancelled = false;
 
-    pollIntervalRef.current = setInterval(() => {
-      fetchStatus();
-    }, 2500);
+    const tick = async () => {
+      const s = await fetchStatus();
+      if (cancelled) return;
+      const delay = s === 'qr_ready' || s === 'connecting' ? FAST_POLL_MS : SLOW_POLL_MS;
+      pollTimeoutRef.current = setTimeout(tick, delay);
+    };
+
+    void tick();
 
     return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
+      cancelled = true;
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
       }
     };
   }, [fetchStatus]);
@@ -107,10 +126,15 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
     status: sessionInfo?.status || 'disconnected',
     qr: sessionInfo?.qr,
     phoneNumber: sessionInfo?.phoneNumber,
+    linking: Boolean(sessionInfo?.linking),
+    qrRefreshing: Boolean(sessionInfo?.qrRefreshing),
+    qrExpired: Boolean(sessionInfo?.qrExpired),
+    sessionError: sessionInfo?.lastError ?? null,
     loading,
     error,
     pairingCode,
     pairingLoading,
+    hasFetchedInitialStatus,
     initSession,
     requestPairing,
     deleteSession,

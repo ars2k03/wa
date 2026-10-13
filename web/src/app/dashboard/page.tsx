@@ -52,8 +52,8 @@ function DashboardContent() {
         };
       case 'keys':
         return {
-          title: 'API Keys & Access Tokens',
-          desc: 'Mint and manage secure API keys to integrate with your external systems',
+          title: 'API Keys',
+          desc: 'Create and manage secret API keys to authenticate your WhatsApp API requests',
         };
       case 'tester':
         return {

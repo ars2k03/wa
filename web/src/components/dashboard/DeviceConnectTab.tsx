@@ -11,26 +11,54 @@ interface DeviceConnectTabProps {
 
 export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
   const [isDisconnecting, setIsDisconnecting] = useState<boolean>(false);
+  const [justLinked, setJustLinked] = useState<boolean>(false);
   const autoInitedRef = useRef<boolean>(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const prevStatusRef = useRef<string | null>(null);
 
   const {
     status,
     qr,
     phoneNumber,
+    linking,
+    qrRefreshing,
+    qrExpired,
+    sessionError,
     loading,
     error,
+    hasFetchedInitialStatus,
     initSession,
     deleteSession,
     refreshStatus,
   } = useWhatsAppSession('default');
 
-  // Automatically request QR code on first load if disconnected
+  // On page load, automatically request a QR if the device isn't linked — including when a
+  // previous QR expired. After that, an expired QR is only renewed when the user clicks reload.
   useEffect(() => {
-    if (!autoInitedRef.current && status === 'disconnected' && !qr && !loading) {
+    if (
+      hasFetchedInitialStatus &&
+      !autoInitedRef.current &&
+      status === 'disconnected' &&
+      !loading
+    ) {
       autoInitedRef.current = true;
       initSession(userId);
     }
-  }, [status, qr, loading, userId, initSession]);
+  }, [hasFetchedInitialStatus, status, loading, userId, initSession]);
+
+  // When a link completes on this page, bring the result into view and celebrate briefly
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    prevStatusRef.current = status;
+    if (status !== 'connected' || prev === null || prev === 'connected') return;
+
+    setJustLinked(true);
+    requestAnimationFrame(() => {
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    const timer = setTimeout(() => setJustLinked(false), 6000);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const handleInit = () => {
     initSession(userId);
@@ -50,12 +78,31 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
     }
   };
 
+  // Initial check before rendering states
+  if (!hasFetchedInitialStatus) {
+    return (
+      <div className="w-full p-12 flex flex-col items-center justify-center border-3 border-[#1a1a1a] bg-[#fbf8f1] shadow-[6px_6px_0px_#1a1a1a] space-y-4">
+        <div className="w-8 h-8 border-3 border-[#1a1a1a] border-t-[#7a2020] rounded-full animate-spin" />
+        <div className="font-mono text-xs font-bold uppercase tracking-wider text-[#524d43]">
+          CHECKING DEVICE STATUS...
+        </div>
+      </div>
+    );
+  }
+
   // ----------------------------------------------------
   // STATE 1: ALREADY CONNECTED (EXPANSIVE FULL-WIDTH VIEW)
   // ----------------------------------------------------
   if (status === 'connected') {
     return (
-      <div className="w-full space-y-6">
+      <div ref={rootRef} className="w-full space-y-6 scroll-mt-6">
+        {justLinked && (
+          <div className="p-4 bg-[#eaf3eb] border-2 border-[#2e6930] text-[#2e6930] font-mono text-xs font-bold shadow-[3px_3px_0px_#2e6930] flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <span className="text-base">✓</span>
+            DEVICE LINKED SUCCESSFULLY — your WhatsApp is ready to send messages.
+          </div>
+        )}
+
         {error && (
           <div className="p-4 bg-[#fae8e8] border-2 border-[#7a2020] text-[#7a2020] font-mono text-xs font-bold shadow-[3px_3px_0px_#7a2020]">
             ! ERROR: {error}
@@ -179,11 +226,33 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
     );
   }
 
+  // Exactly one visual state for the QR panel, so transient backend states never flash a spinner over a usable QR
+  const panel: 'linking' | 'qr' | 'expired' | 'error' | 'starting' | 'idle' = linking
+    ? 'linking'
+    : status === 'qr_ready' && qr
+      ? 'qr'
+      : qrExpired && !loading
+        ? 'expired'
+        : status === 'disconnected' && sessionError
+          ? 'error'
+          : loading || status === 'connecting'
+            ? 'starting'
+            : 'idle';
+
+  const badge = {
+    linking: { variant: 'emerald', label: 'LINKING...' },
+    qr: { variant: 'amber', label: 'READY TO SCAN' },
+    expired: { variant: 'burgundy', label: 'QR EXPIRED' },
+    error: { variant: 'burgundy', label: 'DISCONNECTED' },
+    starting: { variant: 'ink', label: 'PREPARING QR' },
+    idle: { variant: 'neutral', label: 'NOT LINKED' },
+  }[panel] as { variant: 'emerald' | 'amber' | 'burgundy' | 'ink' | 'neutral'; label: string };
+
   // ----------------------------------------------------
   // STATE 2: NOT CONNECTED (EXPANSIVE FULL-WIDTH QR SCAN VIEW)
   // ----------------------------------------------------
   return (
-    <div className="w-full space-y-6">
+    <div ref={rootRef} className="w-full space-y-6 scroll-mt-6">
       {error && (
         <div className="p-4 bg-[#fae8e8] border-2 border-[#7a2020] text-[#7a2020] font-mono text-xs font-bold shadow-[3px_3px_0px_#7a2020]">
           ! ERROR: {error}
@@ -202,9 +271,7 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
             </p>
           </div>
 
-          <Badge variant={status === 'qr_ready' ? 'amber' : 'ink'}>
-            {status === 'qr_ready' ? 'READY TO SCAN' : 'WAITING FOR QR'}
-          </Badge>
+          <Badge variant={badge.variant}>{badge.label}</Badge>
         </div>
 
         {/* Content Grid: Left Instructions (7 cols), Right QR Card (5 cols) */}
@@ -272,22 +339,87 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
             </div>
 
             {/* QR Card Frame */}
-            <div className="border-3 border-[#1a1a1a] bg-[#ffffff] p-4 shadow-[4px_4px_0px_#1a1a1a] w-72 h-72 sm:w-80 sm:h-80 flex flex-col items-center justify-center relative">
-              {loading || status === 'connecting' ? (
+            <div
+              className="border-3 border-[#1a1a1a] bg-[#ffffff] p-4 shadow-[4px_4px_0px_#1a1a1a] w-72 h-72 sm:w-80 sm:h-80 flex flex-col items-center justify-center relative"
+              aria-live="polite"
+            >
+              {panel === 'linking' ? (
+                <div className="space-y-4 text-center px-4">
+                  <div className="w-14 h-14 mx-auto rounded-full bg-[#eaf3eb] border-3 border-[#2e6930] flex items-center justify-center text-2xl text-[#2e6930] font-bold">
+                    ✓
+                  </div>
+                  <div className="font-mono text-xs font-black uppercase tracking-wider text-[#2e6930]">
+                    QR SCANNED
+                  </div>
+                  <div className="flex items-center justify-center gap-2 font-mono text-[11px] text-[#524d43] font-bold">
+                    <span className="w-3.5 h-3.5 border-2 border-[#1a1a1a] border-t-[#2e6930] rounded-full animate-spin" />
+                    LINKING YOUR DEVICE...
+                  </div>
+                  <p className="font-serif text-xs text-[#524d43]">
+                    Keep WhatsApp open on your phone. This usually takes a few seconds.
+                  </p>
+                </div>
+              ) : panel === 'qr' && qr ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qr}
+                    alt="WhatsApp QR Code"
+                    className={`w-64 h-64 sm:w-72 sm:h-72 object-contain transition-[filter,opacity] duration-300 ${
+                      qrRefreshing ? 'blur-[3px] opacity-40' : ''
+                    }`}
+                  />
+                  {qrRefreshing && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                      <div className="w-8 h-8 border-3 border-[#1a1a1a] border-t-[#7a2020] rounded-full animate-spin" />
+                      <div className="font-mono text-[11px] font-black bg-[#fbf8f1] border-2 border-[#1a1a1a] px-2 py-0.5">
+                        REFRESHING QR...
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : panel === 'expired' ? (
+                // WhatsApp Web style: dimmed old QR with a reload button in the middle
+                <>
+                  {qr && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={qr}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-64 h-64 sm:w-72 sm:h-72 object-contain blur-[2px] opacity-20 grayscale select-none pointer-events-none"
+                    />
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={handleInit}
+                      className="group flex flex-col items-center justify-center gap-1.5 w-36 h-36 rounded-full bg-[#2e6930] text-[#fbf8f1] border-3 border-[#1a1a1a] shadow-[4px_4px_0px_#1a1a1a] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_#1a1a1a] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all cursor-pointer"
+                    >
+                      <span className="text-3xl leading-none transition-transform duration-300 group-hover:rotate-180">⟳</span>
+                      <span className="font-mono text-[10px] font-black uppercase tracking-wider leading-tight px-3">
+                        Click to reload QR code
+                      </span>
+                    </button>
+                  </div>
+                </>
+              ) : panel === 'error' ? (
+                <div className="space-y-3 p-4 text-center">
+                  <div className="text-3xl">⚠</div>
+                  <div className="font-mono text-xs font-black uppercase tracking-wider text-[#7a2020]">
+                    CONNECTION INTERRUPTED
+                  </div>
+                  <p className="font-serif text-xs text-[#524d43]">{sessionError}</p>
+                  <Button variant="primary" size="md" onClick={handleInit} isLoading={loading}>
+                    TRY AGAIN
+                  </Button>
+                </div>
+              ) : panel === 'starting' ? (
                 <div className="space-y-3 text-center">
                   <div className="w-10 h-10 border-4 border-[#1a1a1a] border-t-[#7a2020] rounded-full animate-spin mx-auto" />
                   <div className="font-mono text-xs text-[#524d43] font-bold">
                     GENERATING SECURE QR...
                   </div>
-                </div>
-              ) : qr ? (
-                <div className="space-y-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={qr}
-                    alt="WhatsApp QR Code"
-                    className="w-64 h-64 sm:w-72 sm:h-72 object-contain"
-                  />
                 </div>
               ) : (
                 <div className="space-y-3 p-4">
@@ -306,21 +438,21 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
               )}
             </div>
 
-            {qr && (
-              <div className="mt-4 space-y-2">
+            {panel === 'qr' && (
+              <div className="mt-4 space-y-1">
                 <div className="flex items-center justify-center gap-2 font-mono text-[11px] text-[#2e6930] font-bold">
                   <span className="w-2 h-2 rounded-full bg-[#2e6930] animate-ping" />
                   Listening for camera scan...
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleInit}
-                  isLoading={loading}
-                  className="text-xs"
-                >
-                  ⟳ REFRESH QR CODE
-                </Button>
+                <div className="font-mono text-[10px] text-[#524d43]">
+                  Scan within a couple of minutes, before the code expires.
+                </div>
+              </div>
+            )}
+
+            {panel === 'expired' && (
+              <div className="mt-4 font-mono text-[11px] text-[#7a2020] font-bold">
+                QR code expired. Click the button to get a new one.
               </div>
             )}
           </div>

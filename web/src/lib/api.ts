@@ -125,7 +125,7 @@ export const api = {
 
   // API Key Management
   createApiKey: async (payload: {
-    userId: string;
+    userId?: string;
     name?: string;
     sessionId?: string;
   }): Promise<ApiResponse<ApiKey>> => {
@@ -150,7 +150,13 @@ export const api = {
   },
 
   revokeApiKey: async (keyId: string): Promise<ApiResponse<ApiKey>> => {
-    return fetchJson<ApiResponse<ApiKey>>(`/api-keys/${keyId}`, {
+    return fetchJson<ApiResponse<ApiKey>>(`/api-keys/${keyId}/revoke`, {
+      method: 'PUT',
+    });
+  },
+
+  deleteApiKey: async (keyId: string): Promise<ApiResponse<any>> => {
+    return fetchJson<ApiResponse<any>>(`/api-keys/${keyId}`, {
       method: 'DELETE',
     });
   },

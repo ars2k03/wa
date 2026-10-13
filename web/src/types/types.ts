@@ -28,6 +28,10 @@ export interface SessionInfo {
   qr: string | null; // Base64 data URL (data:image/png;base64,...)
   qrRaw: string | null;
   phoneNumber: string | null;
+  linking?: boolean; // QR scanned, device is finishing the link handshake
+  qrRefreshing?: boolean; // Previous QR expired, a new one is being generated
+  qrExpired?: boolean; // Auto-refresh stopped; user must request a new QR
+  lastError?: string | null;
 }
 
 export interface MessageLog {
