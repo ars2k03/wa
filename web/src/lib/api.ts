@@ -51,9 +51,13 @@ async function fetchJson<T>(
       data?.message ||
       data?.error ||
       `HTTP Error ${response.status}: ${response.statusText}`;
-    throw new Error(
+    const error: any = new Error(
       Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage,
     );
+    error.status = response.status;
+    error.data = data;
+    error.isVerified = data?.isVerified;
+    throw error;
   }
 
   return data as T;
@@ -74,8 +78,8 @@ export const api = {
     name?: string;
     email: string;
     password?: string;
-  }): Promise<ApiResponse<{ user: User; token: string }>> => {
-    return fetchJson<ApiResponse<{ user: User; token: string }>>(
+  }): Promise<ApiResponse<{ email: string; isVerified: boolean }>> => {
+    return fetchJson<ApiResponse<{ email: string; isVerified: boolean }>>(
       '/auth/register',
       {
         method: 'POST',
@@ -87,8 +91,8 @@ export const api = {
   login: async (payload: {
     email: string;
     password?: string;
-  }): Promise<ApiResponse<{ user: User; token: string }>> => {
-    return fetchJson<ApiResponse<{ user: User; token: string }>>(
+  }): Promise<ApiResponse<{ user: User; token: string; isVerified?: boolean }>> => {
+    return fetchJson<ApiResponse<{ user: User; token: string; isVerified?: boolean }>>(
       '/auth/login',
       {
         method: 'POST',
@@ -99,6 +103,24 @@ export const api = {
 
   getMe: async (): Promise<ApiResponse<User | null>> => {
     return fetchJson<ApiResponse<User | null>>('/auth/me');
+  },
+
+  // OTP Verification
+  verifyOtp: async (payload: {
+    email: string;
+    otp: string;
+  }): Promise<ApiResponse<any>> => {
+    return fetchJson<ApiResponse<any>>('/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  resendOtp: async (payload: { email: string }): Promise<ApiResponse<any>> => {
+    return fetchJson<ApiResponse<any>>('/otp/send', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 
   // API Key Management

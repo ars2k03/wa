@@ -57,7 +57,9 @@ function RegisterForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,10 +69,21 @@ function RegisterForm() {
       return;
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setError(null);
     try {
       await register(name.trim(), email.trim(), password);
-      router.push('/dashboard');
+      // Workflow: sign up -> verify page
+      router.push(`/verify?email=${encodeURIComponent(email.trim())}`);
     } catch (err: any) {
       setError(err?.message || 'Registration failed');
     }
@@ -85,7 +98,7 @@ function RegisterForm() {
             Create an Account
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-[#524d43]">
-            Sign up to start managing your WhatsApp gateway.
+            Enter your details to create your account.
           </p>
         </div>
 
@@ -109,7 +122,8 @@ function RegisterForm() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Arafat Sohan"
+              required
               className="w-full px-3.5 py-2.5 bg-[#ffffff] border-2 border-[#1a1a1a] text-[#1a1a1a] placeholder-[#8c8270] text-sm focus:outline-none focus:shadow-[2px_2px_0px_#1a1a1a] transition-all"
             />
           </div>
@@ -147,7 +161,8 @@ function RegisterForm() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a password"
+                placeholder="Create password (min 6 chars)"
+                required
                 className="w-full px-3.5 py-2.5 pr-11 bg-[#ffffff] border-2 border-[#1a1a1a] text-[#1a1a1a] placeholder-[#8c8270] text-sm focus:outline-none focus:shadow-[2px_2px_0px_#1a1a1a] transition-all"
               />
               <button
@@ -157,6 +172,35 @@ function RegisterForm() {
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password with Eye Icon */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-xs font-bold uppercase tracking-wider text-[#1a1a1a]"
+            >
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                required
+                className="w-full px-3.5 py-2.5 pr-11 bg-[#ffffff] border-2 border-[#1a1a1a] text-[#1a1a1a] placeholder-[#8c8270] text-sm focus:outline-none focus:shadow-[2px_2px_0px_#1a1a1a] transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#524d43] hover:text-[#1a1a1a] transition-colors cursor-pointer"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>

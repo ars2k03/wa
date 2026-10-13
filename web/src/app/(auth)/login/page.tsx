@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/common/Navbar';
 import { Footer } from '@/components/common/Footer';
@@ -53,11 +53,22 @@ function EyeOffIcon({ className = 'w-5 h-5' }: { className?: string }) {
 
 function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justVerified = searchParams.get('verified') === 'true';
+  const emailParam = searchParams.get('email') || '';
+
   const { login, isLoading } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [emailParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,11 +78,31 @@ function LoginForm() {
     }
 
     setError(null);
+    setInfoMessage(null);
+
     try {
-      await login(email.trim(), password);
-      router.push('/dashboard');
+      const res: any = await login(email.trim(), password);
+      // If user verified successfully -> go to dashboard
+      if (res?.data?.token) {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
-      setError(err?.message || 'Login failed');
+      // Workflow: login -> if verified false -> verify page
+      const isUnverified =
+        err?.status === 403 ||
+        err?.isVerified === false ||
+        err?.data?.isVerified === false ||
+        err?.message?.includes('not verified');
+
+      if (isUnverified) {
+        setInfoMessage('Account not verified yet. Redirecting to verification...');
+        setTimeout(() => {
+          router.push(`/verify?email=${encodeURIComponent(email.trim())}`);
+        }, 1200);
+        return;
+      }
+
+      setError(err?.message || 'Invalid email or password');
     }
   };
 
@@ -87,6 +118,18 @@ function LoginForm() {
             Welcome back! Please enter your details.
           </p>
         </div>
+
+        {justVerified && !infoMessage && (
+          <div className="mb-4 p-3 bg-[#eaf3eb] border border-[#2e6930] text-[#2e6930] text-xs font-medium rounded-sm">
+            Email verified successfully! You can now log in.
+          </div>
+        )}
+
+        {infoMessage && (
+          <div className="mb-4 p-3 bg-[#fefce8] border border-[#b45309] text-[#b45309] text-xs font-medium rounded-sm">
+            {infoMessage}
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-3 bg-[#fae8e8] border border-[#7a2020] text-[#7a2020] text-xs font-medium rounded-sm">
@@ -131,6 +174,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
+                required
                 className="w-full px-3.5 py-2.5 pr-11 bg-[#ffffff] border-2 border-[#1a1a1a] text-[#1a1a1a] placeholder-[#8c8270] text-sm focus:outline-none focus:shadow-[2px_2px_0px_#1a1a1a] transition-all"
               />
               <button
@@ -179,7 +223,9 @@ export default function LoginPage() {
       <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <LoginForm />
+          <Suspense fallback={<div className="p-12 text-center font-mono">Loading sign in...</div>}>
+            <LoginForm />
+          </Suspense>
         </main>
         <Footer />
       </div>

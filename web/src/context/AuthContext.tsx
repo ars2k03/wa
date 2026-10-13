@@ -15,8 +15,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password?: string) => Promise<void>;
-  register: (name: string, email: string, password?: string) => Promise<void>;
+  login: (email: string, password?: string) => Promise<any>;
+  register: (name: string, email: string, password?: string) => Promise<any>;
   logout: () => void;
 }
 
@@ -55,16 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       try {
         const res = await api.login({ email, password });
-        if (res.success && res.data) {
+        if (res.success && res.data?.token) {
           const authUser = res.data.user;
           const authToken = res.data.token;
           setUser(authUser);
           setToken(authToken);
           localStorage.setItem(TOKEN_KEY, authToken);
           localStorage.setItem(USER_KEY, JSON.stringify(authUser));
-        } else {
-          throw new Error(res.message || 'Login failed');
         }
+        return res;
       } finally {
         setIsLoading(false);
       }
@@ -77,16 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       try {
         const res = await api.register({ name, email, password });
-        if (res.success && res.data) {
-          const authUser = res.data.user;
-          const authToken = res.data.token;
-          setUser(authUser);
-          setToken(authToken);
-          localStorage.setItem(TOKEN_KEY, authToken);
-          localStorage.setItem(USER_KEY, JSON.stringify(authUser));
-        } else {
+        if (!res.success) {
           throw new Error(res.message || 'Registration failed');
         }
+        return res;
       } finally {
         setIsLoading(false);
       }
