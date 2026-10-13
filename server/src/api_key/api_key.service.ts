@@ -42,9 +42,9 @@ export class ApiKeyService {
       },
     });
 
-    // Generate secure key: chakri_live_<48 random hex characters>
+    // Generate secure key: _ars_2k03_<48 random hex characters>
     const randomHex = randomBytes(24).toString('hex');
-    const key = `chakri_live_${randomHex}`;
+    const key = `_ars_2k03_${randomHex}`;
 
     const record = await this.prisma.apiKey.create({
       data: {
