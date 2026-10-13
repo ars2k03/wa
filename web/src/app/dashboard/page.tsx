@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/common/Navbar';
 import { Footer } from '@/components/common/Footer';
 import { Badge } from '@/components/ui/Badge';
@@ -16,12 +17,33 @@ import { DeveloperDocsTab } from '@/components/dashboard/DeveloperDocsTab';
 type TabType = 'device' | 'keys' | 'tester' | 'logs' | 'docs';
 
 function DashboardContent() {
-  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('device');
   const [activeKeyForTester, setActiveKeyForTester] = useState<string>('');
 
-  // Fallback to guest operator ID if browsing without logging in
-  const effectiveUserId = user?.id || 'operator_guest';
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-24 flex flex-col items-center justify-center text-center space-y-4">
+        <div className="w-10 h-10 border-4 border-[#1a1a1a] border-t-[#7a2020] rounded-full animate-spin" />
+        <div className="font-mono text-xs font-bold uppercase tracking-widest text-[#524d43]">
+          VERIFYING DISPATCH CREDENTIALS...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  const effectiveUserId = user.id;
 
   const handleKeySelected = (key: string) => {
     setActiveKeyForTester(key);
@@ -36,32 +58,17 @@ function DashboardContent() {
             <span className="font-mono text-xs font-black uppercase text-[#7a2020] tracking-widest">
               OFFICIAL OPERATOR CONTROL DESK
             </span>
-            <Badge variant={isAuthenticated ? 'emerald' : 'amber'} rotate="right">
-              {isAuthenticated ? 'AUTHENTICATED' : 'GUEST OPERATOR'}
+            <Badge variant="emerald" rotate="right">
+              AUTHENTICATED
             </Badge>
           </div>
           <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#1a1a1a] uppercase tracking-tight">
-            {isAuthenticated
-              ? `DISPATCH STATION: ${user?.name || user?.email}`
-              : 'CENTRAL DISPATCH STATION'}
+            DISPATCH STATION: {user.name || user.email}
           </h2>
           <p className="font-serif text-xs sm:text-sm text-[#524d43]">
             Targeting High-Velocity Gateway running on <span className="font-mono font-bold text-[#1a1a1a]">{process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}</span>
           </p>
         </div>
-
-        {!isAuthenticated && (
-          <div className="flex items-center gap-2 bg-[#fbf8f1] border-2 border-[#1a1a1a] p-3 shadow-[2px_2px_0px_#1a1a1a]">
-            <span className="font-serif text-xs text-[#524d43]">
-              Operating as guest session. Sign in to preserve permanent access keys:
-            </span>
-            <Link href="/login">
-              <Button variant="primary" size="sm" className="text-xs py-1 px-3">
-                SIGN IN
-              </Button>
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Tab Navigation Navigation Bar */}
@@ -152,14 +159,12 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-        <Navbar />
-        <main className="flex-1">
-          <DashboardContent />
-        </main>
-        <Footer />
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
+      <Navbar />
+      <main className="flex-1">
+        <DashboardContent />
+      </main>
+      <Footer />
+    </div>
   );
 }

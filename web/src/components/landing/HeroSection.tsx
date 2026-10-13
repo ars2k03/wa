@@ -101,7 +101,7 @@ export function HeroSection() {
 
   return (
     <section className="relative border-b-2 border-[#1a1a1a] bg-[#fbf8f1] px-4 py-12 md:py-18">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Left Column: Headlines, Copy & CTAs */}
         <div className="lg:col-span-7 space-y-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -258,9 +258,9 @@ export function HeroSection() {
                 </Button>
               </form>
 
-              {/* Real Response Output Window */}
-              <div className="bg-[#1a1a1a] p-3 font-mono text-xs border border-[#1a1a1a] overflow-x-auto">
-                <div className="flex items-center justify-between border-b border-[#333333] pb-1.5 mb-2">
+              {/* Real Response Output Window (Fixed height to prevent layout shifts) */}
+              <div className="bg-[#1a1a1a] p-3 font-mono text-xs border border-[#1a1a1a] h-[155px] flex flex-col">
+                <div className="flex items-center justify-between border-b border-[#333333] pb-1.5 mb-2 shrink-0">
                   <span className="text-[#a3a3a3]">
                     {realResponse ? (
                       <span className={realResponse.status >= 200 && realResponse.status < 300 ? 'text-[#86efac]' : 'text-[#f87171]'}>
@@ -277,15 +277,17 @@ export function HeroSection() {
                   )}
                 </div>
 
-                {realResponse ? (
-                  <pre className="text-[#86efac] text-xs leading-relaxed">
-                    {JSON.stringify(realResponse.data, null, 2)}
-                  </pre>
-                ) : (
-                  <div className="text-[#737373] text-[11px] italic py-2">
-                    Press &quot;Send Live Request&quot; to execute real HTTP request to {apiUrl}/send-otp
-                  </div>
-                )}
+                <div className="flex-1 overflow-y-auto overflow-x-auto">
+                  {realResponse ? (
+                    <pre className="text-[#86efac] text-xs leading-relaxed">
+                      {JSON.stringify(realResponse.data, null, 2)}
+                    </pre>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-[#737373] text-[11px] italic text-center p-2">
+                      Press &quot;Send Live Request&quot; to execute real HTTP request to {apiUrl}/send-otp
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

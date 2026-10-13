@@ -57,12 +57,18 @@ function LoginForm() {
   const justVerified = searchParams.get('verified') === 'true';
   const emailParam = searchParams.get('email') || '';
 
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
   const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (emailParam) {
@@ -219,16 +225,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <Suspense fallback={<div className="p-12 text-center font-mono">Loading sign in...</div>}>
-            <LoginForm />
-          </Suspense>
-        </main>
-        <Footer />
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
+      <Navbar />
+      <main className="flex-1 flex items-center justify-center">
+        <Suspense fallback={<div className="p-12 text-center font-mono">Loading sign in...</div>}>
+          <LoginForm />
+        </Suspense>
+      </main>
+      <Footer />
+    </div>
   );
 }

@@ -51,11 +51,11 @@ export function HowItWorks() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative items-stretch">
           {STEPS.map((step, idx) => (
             <div
               key={idx}
-              className="border-2 border-[#1a1a1a] bg-[#f4efe2] p-6 shadow-[4px_4px_0px_#1a1a1a] flex flex-col justify-between relative"
+              className="border-2 border-[#1a1a1a] bg-[#f4efe2] p-6 shadow-[4px_4px_0px_#1a1a1a] flex flex-col justify-between relative h-full min-h-[260px]"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-[#1a1a1a] pb-2">

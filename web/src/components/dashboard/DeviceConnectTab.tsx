@@ -144,7 +144,7 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
       </Card>
 
       {/* Main Connection Interface: QR or Pairing Code */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: QR Code Scanner Frame */}
         <div className="lg:col-span-7">
           <Card

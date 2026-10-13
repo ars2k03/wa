@@ -53,7 +53,7 @@ function EyeOffIcon({ className = 'w-5 h-5' }: { className?: string }) {
 
 function RegisterForm() {
   const router = useRouter();
-  const { register, isLoading } = useAuth();
+  const { register, isLoading, isAuthenticated } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,6 +61,12 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,14 +242,12 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <RegisterForm />
-        </main>
-        <Footer />
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
+      <Navbar />
+      <main className="flex-1 flex items-center justify-center">
+        <RegisterForm />
+      </main>
+      <Footer />
+    </div>
   );
 }

@@ -166,8 +166,8 @@ export function CodePreview() {
             </Button>
           </div>
 
-          {/* Code Window */}
-          <div className="p-5 font-mono text-xs sm:text-sm overflow-x-auto leading-relaxed text-[#fbf8f1]">
+          {/* Code Window (Fixed height to prevent jumping on tab switches) */}
+          <div className="p-5 font-mono text-xs sm:text-sm overflow-x-auto overflow-y-auto leading-relaxed text-[#fbf8f1] h-[280px]">
             <pre>
               <code>{snippets[activeTab]?.code}</code>
             </pre>

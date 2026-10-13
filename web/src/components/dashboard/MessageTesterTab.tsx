@@ -102,7 +102,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
         </p>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Form Column */}
         <div className="lg:col-span-7">
           <div className="border-3 border-[#1a1a1a] bg-[#fbf8f1] shadow-[6px_6px_0px_#1a1a1a] p-6 space-y-6">
@@ -228,7 +228,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
               )}
             </div>
 
-            <div className="p-5 font-mono text-xs flex-1 flex flex-col justify-between space-y-4">
+            <div className="p-5 font-mono text-xs flex-1 flex flex-col justify-between space-y-4 min-h-[360px]">
               {error ? (
                 <div className="p-3 bg-[#3f1212] border border-[#ef4444] text-[#fca5a5] space-y-1">
                   <div className="font-bold">TRANSMISSION FAILED</div>
@@ -239,7 +239,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                   <div className="text-[#84cc16] font-bold">
                     ✓ STATUS 200 OK — WIRE TRANSMITTED
                   </div>
-                  <pre className="bg-[#111111] p-3 border border-[#333333] text-[#38bdf8] overflow-x-auto">
+                  <pre className="bg-[#111111] p-3 border border-[#333333] text-[#38bdf8] overflow-x-auto max-h-[220px] overflow-y-auto">
                     <code>{JSON.stringify(responseOutput, null, 2)}</code>
                   </pre>
                   <div className="text-[#a3a3a3] text-[11px]">
@@ -247,7 +247,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                   </div>
                 </div>
               ) : (
-                <div className="text-[#737373] italic py-12 text-center">
+                <div className="text-[#737373] italic py-12 text-center my-auto">
                   Awaiting dispatch submission... Press &quot;Transmit Telegram&quot; to inspect returned packet.
                 </div>
               )}

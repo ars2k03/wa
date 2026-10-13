@@ -40,14 +40,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsedUser = JSON.parse(savedUserStr);
         setToken(savedToken);
         setUser(parsedUser);
+      } else {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
       }
     } catch (err) {
       console.warn('Failed to parse cached auth state:', err);
+      setToken(null);
+      setUser(null);
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
     } finally {
       setIsLoading(false);
     }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === TOKEN_KEY || e.key === USER_KEY) {
+        const currToken = localStorage.getItem(TOKEN_KEY);
+        const currUserStr = localStorage.getItem(USER_KEY);
+        if (currToken && currUserStr) {
+          try {
+            setToken(currToken);
+            setUser(JSON.parse(currUserStr));
+          } catch {
+            setToken(null);
+            setUser(null);
+          }
+        } else {
+          setToken(null);
+          setUser(null);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const login = useCallback(
@@ -106,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         token,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && !!token,
         login,
         register,
         logout,

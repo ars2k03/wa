@@ -56,7 +56,7 @@ export function Navbar() {
   const handleConfirmSignout = () => {
     logout();
     setIsSignoutModalOpen(false);
-    router.push('/login');
+    router.replace('/');
   };
 
   return (
@@ -159,8 +159,7 @@ export function Navbar() {
       <Modal
         isOpen={isSignoutModalOpen}
         onClose={() => setIsSignoutModalOpen(false)}
-        title="CONFIRM SIGN OUT"
-        subtitle="SESSION TERMINATION & STORAGE PURGE"
+        title="Sign Out"
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
@@ -177,41 +176,14 @@ export function Navbar() {
               onClick={handleConfirmSignout}
               className="text-xs bg-[#7a2020] text-[#fbf8f1]"
             >
-              Sign Out & Clear All
+              Sign Out
             </Button>
           </div>
         }
       >
-        <div className="space-y-4 font-serif">
-          <div className="flex items-start gap-3 p-3.5 bg-[#ede5d3] border-2 border-[#1a1a1a]">
-            <span className="text-xl">⚠️</span>
-            <div className="text-xs space-y-1">
-              <p className="font-bold text-[#1a1a1a] uppercase font-mono tracking-wider">
-                Caution: Terminate Active Operator Session
-              </p>
-              <p className="text-[#524d43]">
-                Are you sure you want to sign out? Your credentials, authentication tokens, and cached operator keys will be fully cleared on this device.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-[#f4efe2] border border-[#1a1a1a] p-3 text-xs font-mono space-y-1">
-            <div className="flex justify-between">
-              <span className="text-[#524d43]">CURRENT OPERATOR:</span>
-              <span className="font-bold text-[#1a1a1a]">{user?.name || user?.email || 'Authenticated User'}</span>
-            </div>
-            {user?.email && (
-              <div className="flex justify-between">
-                <span className="text-[#524d43]">EMAIL:</span>
-                <span className="font-bold text-[#1a1a1a]">{user.email}</span>
-              </div>
-            )}
-            <div className="flex justify-between border-t border-[#1a1a1a]/20 pt-1 mt-1">
-              <span className="text-[#524d43]">ACTION:</span>
-              <span className="text-[#7a2020] font-black uppercase">FULL STORAGE PURGE (ALL CLEAR)</span>
-            </div>
-          </div>
-        </div>
+        <p className="font-serif text-sm text-[#524d43] leading-relaxed">
+          Are you sure you want to sign out of your account?
+        </p>
       </Modal>
     </header>
   );

@@ -268,16 +268,14 @@ function VerifyForm() {
 
 export default function VerifyPage() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <Suspense fallback={<div className="p-12 text-center font-mono">Loading verification...</div>}>
-            <VerifyForm />
-          </Suspense>
-        </main>
-        <Footer />
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col bg-[#fbf8f1] text-[#1a1a1a]">
+      <Navbar />
+      <main className="flex-1 flex items-center justify-center">
+        <Suspense fallback={<div className="p-12 text-center font-mono">Loading verification...</div>}>
+          <VerifyForm />
+        </Suspense>
+      </main>
+      <Footer />
+    </div>
   );
 }
