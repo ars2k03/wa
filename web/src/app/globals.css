@@ -1,26 +1,160 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Paper & Ink Tokens */
+  --background: #fbf8f1;
+  --foreground: #1a1a1a;
+  --paper-cream: #fbf8f1;
+  --paper-tint: #f4efe2;
+  --paper-border: #1a1a1a;
+  --ink-primary: #1a1a1a;
+  --ink-muted: #524d43;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Vintage Editorial Accents */
+  --accent-burgundy: #7a2020;
+  --accent-emerald: #2e6930;
+  --accent-amber: #b45309;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: Georgia, Baskerville, "Times New Roman", Garamond, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Editorial Brutalist Utilities */
+.font-headline {
+  font-family: var(--font-serif);
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+}
+
+/* Brutalist Hard Shadow Box */
+.brutalist-card {
+  background-color: #fbf8f1;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0px #1a1a1a;
+}
+
+.brutalist-card-sm {
+  background-color: #fbf8f1;
+  border: 2px solid #1a1a1a;
+  box-shadow: 2px 2px 0px #1a1a1a;
+}
+
+.brutalist-card-tint {
+  background-color: #f4efe2;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0px #1a1a1a;
+}
+
+/* Tactile Press Buttons */
+.btn-retro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid #1a1a1a;
+  background-color: #f4efe2;
+  color: #1a1a1a;
+  box-shadow: 3px 3px 0px #1a1a1a;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-retro:hover:not(:disabled) {
+  background-color: #ede5d3;
+}
+
+.btn-retro:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #1a1a1a;
+}
+
+.btn-retro:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.btn-retro-primary {
+  background-color: #7a2020;
+  color: #fbf8f1;
+}
+
+.btn-retro-primary:hover:not(:disabled) {
+  background-color: #611818;
+}
+
+.btn-retro-emerald {
+  background-color: #2e6930;
+  color: #fbf8f1;
+}
+
+.btn-retro-emerald:hover:not(:disabled) {
+  background-color: #245226;
+}
+
+.btn-retro-dark {
+  background-color: #1a1a1a;
+  color: #fbf8f1;
+}
+
+.btn-retro-dark:hover:not(:disabled) {
+  background-color: #333333;
+}
+
+/* Vintage Official Stamps */
+.stamp-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem;
+  border: 2px solid #1a1a1a;
+  border-radius: 2px;
+}
+
+.stamp-green {
+  border-color: #2e6930;
+  color: #2e6930;
+  background-color: #eaf3eb;
+}
+
+.stamp-burgundy {
+  border-color: #7a2020;
+  color: #7a2020;
+  background-color: #fae8e8;
+}
+
+.stamp-amber {
+  border-color: #b45309;
+  color: #b45309;
+  background-color: #fef3c7;
+}
+
+/* Ruled Newspaper Lines */
+.double-ruled {
+  border-top: 3px double #1a1a1a;
+}
+
+.single-ruled {
+  border-top: 1px solid #1a1a1a;
+}
+
+.column-border-right {
+  border-right: 1px solid #1a1a1a;
 }

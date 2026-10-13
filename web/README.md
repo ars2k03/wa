@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# THE TELEGRAPHIC DISPATCH — WhatsApp Gateway SaaS Frontend
 
-## Getting Started
+A bespoke, production-ready SaaS frontend interface engineered for the Multi-Tenant WhatsApp Gateway built with **Next.js 16 (App Router)**, **React 19**, and **Tailwind CSS**.
 
-First, run the development server:
+Directly implements the **Vintage Newsprint Broadsheet & Retro Editorial Brutalism** design language specified in [DESIGN.md](./DESIGN.md) (warm newsprint cream `#fbf8f1`, printer ink `#1a1a1a`, oxblood burgundy `#7a2020`, official stamp green `#2e6930`, hard 3px offset drop shadows, tactile button feedback, and editorial column layouts).
+
+---
+
+## Architecture & Features
+
+### 1. Broadsheet Front Page (`/`)
+- Vintage newspaper masthead with live gateway status indicator and date ticker.
+- High-velocity hero section with interactive telegraph dispatch terminal simulation.
+- 6-column architectural capability cards (Session Isolation, Baileys WebSockets, Cryptographic Key Minting, etc.).
+- 3-stage operating manual (Account Enrollment → Apparatus Handshake → Wire Dispatch).
+- Multi-language wire protocol code preview (cURL, Node.js, Python, PHP, Go).
+
+### 2. Authentication (`/login`, `/register`)
+- Sovereign operator account enrollment and sign-in.
+- State persistence via `AuthContext` (JWT & local storage).
+- One-click demo credentials autofill for zero-friction testing.
+
+### 3. Central Dispatch Console (`/dashboard`)
+- **Apparatus Link (QR)**: Live Base64 QR code rendering with auto-polling (2.5s) and 8-digit numeric pairing PIN code support.
+- **API Key Console**: Mint unique `_ars_2k03_...` keys, one-click copy, session linking, and permanent revocation.
+- **Live Tester (OTP)**: Classified-ad order form to submit real authenticated HTTP requests directly to `/send-otp` with live response tape viewer and latency timing.
+- **Message Ledger**: Ruled ledger table listing dispatched messages with recipient phone, type, message ID, timestamp, and delivery status badge.
+- **Documentation**: Complete REST wire specs, headers, schemas, and curl commands.
+
+---
+
+## Connecting to Backend
+
+The frontend communicates with the backend NestJS service running on port `3002`:
 
 ```bash
+# In backend directory:
+npm run start:dev
+
+# In frontend directory:
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Visit [http://localhost:3000](http://localhost:3000) to access the console.
