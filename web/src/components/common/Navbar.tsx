@@ -138,7 +138,7 @@ export function Navbar() {
               </Link>
               <Link href="/register">
                 <Button variant="primary" size="sm" className="text-xs py-1.5 px-3 sm:px-4">
-                  Get Started
+                  Sign Up
                 </Button>
               </Link>
             </div>
