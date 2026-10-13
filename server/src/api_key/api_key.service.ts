@@ -1,12 +1,8 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
+import { LinkSessionDto } from './dto/link-session.dto.js';
 
 export interface CachedApiKey {
   id: string;
@@ -28,8 +24,8 @@ export class ApiKeyService {
   /**
    * Generates a new cryptographically secure API Key
    */
-  async createApiKey(dto: CreateApiKeyDto) {
-    const { userId, name = 'Default Key', sessionId } = dto;
+  async createApiKey(body: CreateApiKeyDto) {
+    const { userId, name = 'Default Key', sessionId } = body;
 
     // Ensure the user exists in database, or create a default user record
     await this.prisma.user.upsert({
@@ -116,7 +112,8 @@ export class ApiKeyService {
   /**
    * Links or updates a WhatsApp session ID for an API Key
    */
-  async linkSessionToKey(keyId: string, sessionId: string) {
+  async linkSessionToKey(keyId: string, body: LinkSessionDto) {
+    const { sessionId } = body;
     const updated = await this.prisma.apiKey.update({
       where: { id: keyId },
       data: { sessionId },

@@ -1,13 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpStatus,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post } from '@nestjs/common';
 import { WhatsappSessionService } from './whatsapp_session.service.js';
+import { InitSessionDto } from './dto/init-session.dto.js';
+import { PairingCodeDto } from './dto/pairing-code.dto.js';
 
 @Controller('sessions')
 export class WhatsappSessionController {
@@ -25,9 +19,9 @@ export class WhatsappSessionController {
   @Post(':sessionId/init')
   async initSession(
     @Param('sessionId') sessionId: string,
-    @Body('userId') userId?: string,
+    @Body() body: InitSessionDto,
   ) {
-    const session = await this.sessionService.initSession(sessionId, userId);
+    const session = await this.sessionService.initSession(sessionId, body);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -49,12 +43,9 @@ export class WhatsappSessionController {
   @Post(':sessionId/pairing-code')
   async requestPairingCode(
     @Param('sessionId') sessionId: string,
-    @Body('phoneNumber') phoneNumber: string,
+    @Body() body: PairingCodeDto,
   ) {
-    const code = await this.sessionService.requestPairingCode(
-      sessionId,
-      phoneNumber,
-    );
+    const code = await this.sessionService.requestPairingCode(sessionId, body);
     return {
       statusCode: HttpStatus.OK,
       success: true,

@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -21,13 +16,9 @@ export class AuthService {
   ) {}
 
   async register(body: RegisterDto) {
-    if (!body?.email) {
-      throw new BadRequestException('Email is required');
-    }
-
-    const email = body.email.trim().toLowerCase();
-    const name = body.name?.trim() || email.split('@')[0];
-    const password = body.password ? await bcrypt.hash(body.password, 10) : null;
+    const { email, name: rawName, password: rawPassword } = body;
+    const name = rawName || email.split('@')[0];
+    const password = rawPassword ? await bcrypt.hash(rawPassword, 10) : null;
 
     // Check existing user
     let user = await this.prisma.user.findUnique({
@@ -73,11 +64,7 @@ export class AuthService {
   }
 
   async login(body: LoginDto) {
-    if (!body?.email) {
-      throw new BadRequestException('Email is required');
-    }
-
-    const email = body.email.trim().toLowerCase();
+    const { email, password } = body;
 
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -88,8 +75,8 @@ export class AuthService {
     }
 
     // Verify password if one was set
-    if (user.password && body.password) {
-      const isValid = await bcrypt.compare(body.password, user.password);
+    if (user.password && password) {
+      const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) {
         throw new UnauthorizedException('Invalid email or password');
       }

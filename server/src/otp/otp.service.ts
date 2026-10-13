@@ -1,13 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SendOtpDto } from './dto/send-otp.dto.js';
+import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 
 @Injectable()
 export class OtpService {
@@ -38,12 +34,8 @@ export class OtpService {
     }
   }
 
-  async sendOtp(rawEmail: string): Promise<{ success: boolean; message: string }> {
-    if (!rawEmail) {
-      throw new BadRequestException('Email address is required');
-    }
-
-    const email = rawEmail.trim().toLowerCase();
+  async sendOtp(body: SendOtpDto | string): Promise<{ success: boolean; message: string }> {
+    const email = typeof body === 'string' ? body : body.email;
 
     // Verify user exists in database
     const user = await this.prisma.user.findUnique({
@@ -82,16 +74,8 @@ export class OtpService {
     };
   }
 
-  async verifyOtp(
-    rawEmail: string,
-    rawOtp: string,
-  ): Promise<{ success: boolean; message: string }> {
-    if (!rawEmail || !rawOtp) {
-      throw new BadRequestException('Email and OTP code are required');
-    }
-
-    const email = rawEmail.trim().toLowerCase();
-    const otp = rawOtp.trim();
+  async verifyOtp(body: VerifyOtpDto): Promise<{ success: boolean; message: string }> {
+    const { email, otp } = body;
 
     const user = await this.prisma.user.findUnique({
       where: { email },

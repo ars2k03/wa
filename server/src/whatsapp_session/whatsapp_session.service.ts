@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import QRCode from 'qrcode';
 import pino from 'pino';
@@ -13,6 +6,8 @@ import type { WASocket } from 'baileys';
 import { ConfigService } from '@nestjs/config';
 import { useRedisAuthState } from '../redis/redis-auth-state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { InitSessionDto } from './dto/init-session.dto.js';
+import { PairingCodeDto } from './dto/pairing-code.dto.js';
 
 export type WhatsAppConnectionStatus =
   | 'connecting'
@@ -116,8 +111,9 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
    */
   async initSession(
     sessionId: string = this.defaultSessionId,
-    userId?: string,
+    body?: InitSessionDto | string,
   ): Promise<SessionInfo> {
+    const userId = typeof body === 'object' && body ? body.userId : body;
     const existing = this.sessions.get(sessionId);
     if (
       existing &&
@@ -258,7 +254,11 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
   /**
    * Request pairing code for phone-number based linking (without camera scan)
    */
-  async requestPairingCode(sessionId: string, phoneNumber: string): Promise<string> {
+  async requestPairingCode(
+    sessionId: string,
+    body: PairingCodeDto | string,
+  ): Promise<string> {
+    const phoneNumber = typeof body === 'string' ? body : body.phoneNumber;
     const session = this.sessions.get(sessionId);
     if (!session || !session.socket) {
       throw new BadRequestException(

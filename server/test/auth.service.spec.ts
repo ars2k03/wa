@@ -1,12 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../src/auth/auth.service.js';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import { RegisterDto } from '../src/auth/dto/register.dto.js';
+import { LoginDto } from '../src/auth/dto/login.dto.js';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let prismaMock: any;
   let jwtMock: any;
-
   let otpMock: any;
 
   beforeEach(() => {
@@ -32,10 +35,10 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('throws BadRequestException if email is missing', async () => {
-      await expect(
-        authService.register({ email: '' }),
-      ).rejects.toThrow(BadRequestException);
+    it('fails DTO validation if email is invalid or missing', async () => {
+      const dto = plainToInstance(RegisterDto, { email: '' });
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
     });
 
     it('creates a new user and triggers OTP dispatch', async () => {
@@ -58,10 +61,17 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('throws BadRequestException if email is missing', async () => {
+    it('fails DTO validation if email is invalid or missing', async () => {
+      const dto = plainToInstance(LoginDto, { email: '' });
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('throws UnauthorizedException if user does not exist', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
       await expect(
-        authService.login({ email: '' }),
-      ).rejects.toThrow(BadRequestException);
+        authService.login({ email: 'nonexistent@example.com' }),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('returns token for verified user', async () => {

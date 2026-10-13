@@ -9,7 +9,7 @@ export class OtpController {
 
   @Post('send')
   async sendOtp(@Body() body: SendOtpDto) {
-    const result = await this.otpService.sendOtp(body.email);
+    const result = await this.otpService.sendOtp(body);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -19,7 +19,7 @@ export class OtpController {
 
   @Post('verify')
   async verifyOtp(@Body() body: VerifyOtpDto) {
-    const result = await this.otpService.verifyOtp(body.email, body.otp);
+    const result = await this.otpService.verifyOtp(body);
     return {
       statusCode: HttpStatus.OK,
       success: true,

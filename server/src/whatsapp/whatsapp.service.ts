@@ -1,12 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { WhatsappSessionService } from '../whatsapp_session/whatsapp_session.service.js';
-import {
-  createOtpCopyMessage,
-  otpCopyMessageNodes,
-} from './template/template.js';
+import { createOtpCopyMessage, otpCopyMessageNodes } from './template/template.js';
+import { SendOtpDto } from './dto/send-otp.dto.js';
 
 @Injectable()
 export class WhatsappService {
@@ -15,16 +10,12 @@ export class WhatsappService {
   /**
    * Sends an OTP code using the specified WhatsApp session
    */
-  async sendOtpCode(params: {
-    sessionId?: string;
-    phoneNumber: string;
-    otp: string;
-  }): Promise<{ messageId: string; recipientJid: string; senderSession: string }> {
-    const { sessionId = 'default', phoneNumber, otp } = params;
-
-    if (!otp?.trim()) {
-      throw new BadRequestException('OTP code is required');
-    }
+  async sendOtpCode(
+    body: SendOtpDto,
+    overrideSessionId?: string,
+  ): Promise<{ messageId: string; recipientJid: string; senderSession: string }> {
+    const { phoneNumber, otp, sessionId: dtoSessionId } = body;
+    const sessionId = overrideSessionId || dtoSessionId || 'default';
 
     const { socket, jid, userId } = await this.getRecipient(sessionId, phoneNumber);
     const content = createOtpCopyMessage(otp);

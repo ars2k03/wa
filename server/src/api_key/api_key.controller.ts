@@ -1,16 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
-  
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { ApiKeyService } from './api_key.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
+import { LinkSessionDto } from './dto/link-session.dto.js';
 
 @Controller('api-keys')
 export class ApiKeyController {
@@ -40,13 +31,13 @@ export class ApiKeyController {
   @Put(':keyId/link-session')
   async linkSession(
     @Param('keyId') keyId: string,
-    @Body('sessionId') sessionId: string,
+    @Body() body: LinkSessionDto,
   ) {
-    const updated = await this.apiKeyService.linkSessionToKey(keyId, sessionId);
+    const updated = await this.apiKeyService.linkSessionToKey(keyId, body);
     return {
       statusCode: HttpStatus.OK,
       success: true,
-      message: `Session "${sessionId}" linked to API key successfully`,
+      message: `Session "${body.sessionId}" linked to API key successfully`,
       data: updated,
     };
   }

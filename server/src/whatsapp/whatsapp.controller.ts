@@ -1,18 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
-import {
-  ApiKeyGuard,
-  type AuthenticatedRequest,
-} from '../api_key/guards/api-key.guard.js';
+import { ApiKeyGuard, type AuthenticatedRequest } from '../api_key/guards/api-key.guard.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Controller()
@@ -28,14 +17,9 @@ export class WhatsappController {
     @Body() body: SendOtpDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    // Prefer session linked to the API key, fallback to explicit body sessionId
     const targetSessionId = req.sessionId || body.sessionId || 'default';
 
-    const result = await this.whatsappService.sendOtpCode({
-      sessionId: targetSessionId,
-      phoneNumber: body.phoneNumber,
-      otp: body.otp,
-    });
+    const result = await this.whatsappService.sendOtpCode(body, req.sessionId);
 
     // Audit log in database
     void this.prisma.messageLog
