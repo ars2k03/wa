@@ -60,7 +60,7 @@ export class WhatsappController {
   }
 
   @Get('message-logs')
-  async getMessageLogs(@Req() req: any) {
+  async getMessageLogs(@Req() _req: any) {
     const logs = await this.prisma.messageLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 100,

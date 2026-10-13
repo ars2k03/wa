@@ -11,7 +11,7 @@ import QRCode from 'qrcode';
 import pino from 'pino';
 import type { WASocket } from 'baileys';
 import { ConfigService } from '@nestjs/config';
-import { useRedisAuthState } from '../auth/redis-auth-state.js';
+import { useRedisAuthState } from '../redis/redis-auth-state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export type WhatsAppConnectionStatus =
@@ -85,7 +85,7 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
       if (session.reconnectTimer) {
         clearTimeout(session.reconnectTimer);
       }
-      session.socket?.end(new Error('Application shutting down'));
+      void session.socket?.end(new Error('Application shutting down'));
     }
     this.sessions.clear();
     this.redis?.disconnect();
@@ -308,7 +308,7 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
         clearTimeout(session.reconnectTimer);
       }
       try {
-        session.socket?.end(new Error('Session deleted'));
+        void session.socket?.end(new Error('Session deleted'));
       } catch {
         /* ignore */
       }
