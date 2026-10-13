@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useWhatsAppSession } from '@/hooks/useWhatsAppSession';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { Modal } from '../ui/Modal';
 
 interface DeviceConnectTabProps {
   userId?: string;
@@ -11,6 +12,9 @@ interface DeviceConnectTabProps {
 
 export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
   const [isDisconnecting, setIsDisconnecting] = useState<boolean>(false);
+  const [showDisconnectModal, setShowDisconnectModal] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [refreshSuccess, setRefreshSuccess] = useState<boolean>(false);
   const [justLinked, setJustLinked] = useState<boolean>(false);
   const autoInitedRef = useRef<boolean>(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -64,17 +68,28 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
     initSession(userId);
   };
 
-  const handleDisconnect = async () => {
-    const confirm = window.confirm(
-      'Are you sure you want to disconnect this WhatsApp device? You will need to scan QR code again to reconnect.',
-    );
-    if (!confirm) return;
+  const handleOpenDisconnectModal = () => {
+    setShowDisconnectModal(true);
+  };
 
+  const handleConfirmDisconnect = async () => {
     setIsDisconnecting(true);
     try {
       await deleteSession();
+      setShowDisconnectModal(false);
     } finally {
       setIsDisconnecting(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshStatus();
+      setRefreshSuccess(true);
+      setTimeout(() => setRefreshSuccess(false), 2000);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -96,12 +111,6 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
   if (status === 'connected') {
     return (
       <div ref={rootRef} className="w-full space-y-6 scroll-mt-6">
-        {justLinked && (
-          <div className="p-4 bg-[#eaf3eb] border-2 border-[#2e6930] text-[#2e6930] font-mono text-xs font-bold shadow-[3px_3px_0px_#2e6930] flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-            <span className="text-base">✓</span>
-            DEVICE LINKED SUCCESSFULLY — your WhatsApp is ready to send messages.
-          </div>
-        )}
 
         {error && (
           <div className="p-4 bg-[#fae8e8] border-2 border-[#7a2020] text-[#7a2020] font-mono text-xs font-bold shadow-[3px_3px_0px_#7a2020]">
@@ -161,13 +170,6 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
                 </div>
               </div>
 
-              {/* Informational reassurance */}
-              <div className="p-4 bg-[#eaf3eb] border-2 border-[#2e6930] text-xs font-mono text-[#2e6930] flex items-center gap-3">
-                <span className="text-xl">🔒</span>
-                <span>
-                  All communications sent via this phone use end-to-end encryption through the WhatsApp multi-device protocol.
-                </span>
-              </div>
             </div>
 
             {/* Right 5 Columns: Specs & Actions */}
@@ -202,18 +204,18 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
                 <Button
                   variant="secondary"
                   size="md"
-                  onClick={refreshStatus}
+                  onClick={handleRefresh}
+                  isLoading={isRefreshing}
                   className="w-full sm:w-auto text-xs"
                   title="Verify socket health"
                 >
-                  ⟳ REFRESH STATUS
+                  {refreshSuccess ? '✓ UPDATED' : '⟳ REFRESH STATUS'}
                 </Button>
 
                 <Button
                   variant="outline"
                   size="md"
-                  onClick={handleDisconnect}
-                  isLoading={isDisconnecting}
+                  onClick={handleOpenDisconnectModal}
                   className="w-full sm:w-auto text-xs text-[#7a2020] border-[#7a2020] hover:bg-[#fae8e8]"
                 >
                   DISCONNECT DEVICE
@@ -222,6 +224,40 @@ export function DeviceConnectTab({ userId }: DeviceConnectTabProps) {
             </div>
           </div>
         </div>
+
+        {/* Custom Theme Disconnect Confirmation Modal */}
+        <Modal
+          isOpen={showDisconnectModal}
+          onClose={() => setShowDisconnectModal(false)}
+          title="DISCONNECT WHATSAPP DEVICE"
+          subtitle="CONFIRM DEVICE UNLINKING"
+        >
+          <div className="space-y-4">
+            <div className="p-3.5 bg-[#fae8e8] border-2 border-[#7a2020] text-[#7a2020] text-xs font-serif leading-relaxed">
+              <span className="font-bold">Warning:</span> Are you sure you want to disconnect this WhatsApp device? Automated message dispatching will stop until you scan the QR code to reconnect.
+            </div>
+
+            <div className="pt-2 flex justify-end gap-3 border-t border-[#1a1a1a]/20">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowDisconnectModal(false)}
+                disabled={isDisconnecting}
+              >
+                CANCEL
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleConfirmDisconnect}
+                isLoading={isDisconnecting}
+                className="bg-[#7a2020] hover:bg-[#5a1515] text-white border-[#1a1a1a]"
+              >
+                DISCONNECT NOW
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
