@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
@@ -26,6 +26,10 @@ export class ApiKeyService {
    */
   async createApiKey(body: CreateApiKeyDto) {
     const { userId, name = 'Default Key', sessionId } = body;
+
+    if (!userId) {
+      throw new BadRequestException('User ID is required to generate an API key');
+    }
 
     // Ensure linked session belongs to this user if specified
     if (sessionId && userId) {
@@ -196,5 +200,30 @@ export class ApiKeyService {
     this.memoryCache.delete(record.key);
     this.logger.log(`Revoked API Key: ${keyId}`);
     return updated;
+  }
+
+  /**
+   * Permanently deletes an API Key
+   */
+  async deleteApiKey(keyId: string, userId?: string) {
+    const record = await this.prisma.apiKey.findUnique({
+      where: { id: keyId },
+    });
+
+    if (!record) {
+      throw new NotFoundException(`API Key "${keyId}" not found`);
+    }
+
+    if (userId && record.userId !== userId) {
+      throw new ForbiddenException('You do not have permission to delete this API key');
+    }
+
+    await this.prisma.apiKey.delete({
+      where: { id: keyId },
+    });
+
+    this.memoryCache.delete(record.key);
+    this.logger.log(`Deleted API Key: ${keyId}`);
+    return { id: keyId, deleted: true };
   }
 }

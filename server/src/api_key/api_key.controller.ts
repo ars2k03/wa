@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ApiKeyService } from './api_key.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
 import { LinkSessionDto } from './dto/link-session.dto.js';
@@ -16,6 +16,9 @@ export class ApiKeyController {
   ) {
     if (req.user?.id) {
       body.userId = req.user.id;
+    }
+    if (!body.userId) {
+      throw new BadRequestException('User ID is required to generate an API key');
     }
     const apiKey = await this.apiKeyService.createApiKey(body);
     return {
@@ -60,7 +63,7 @@ export class ApiKeyController {
     };
   }
 
-  @Delete(':keyId')
+  @Put(':keyId/revoke')
   async revokeApiKey(
     @Param('keyId') keyId: string,
     @Req() req: AuthenticatedRequest,
@@ -73,4 +76,19 @@ export class ApiKeyController {
       data: revoked,
     };
   }
+
+  @Delete(':keyId')
+  async deleteApiKey(
+    @Param('keyId') keyId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const deleted = await this.apiKeyService.deleteApiKey(keyId, req.user?.id);
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'API Key deleted successfully',
+      data: deleted,
+    };
+  }
 }
+
