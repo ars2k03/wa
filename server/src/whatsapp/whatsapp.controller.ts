@@ -91,6 +91,14 @@ export class WhatsappController {
     const keys = userApiKeys.map((k) => k.key);
     const sessionIds = userSessions.map((s) => s.sessionId);
 
+    if (keys.length === 0 && sessionIds.length === 0) {
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        data: [],
+      };
+    }
+
     const logs = await this.prisma.messageLog.findMany({
       where: {
         OR: [

@@ -696,7 +696,7 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
 
     if (!socket?.user || session?.status !== 'connected') {
       throw new ServiceUnavailableException(
-        `WhatsApp session "${targetSessionId}" is not connected. Please scan QR first.`,
+        'WhatsApp device is not connected. Please connect your device in the WhatsApp Device tab first.',
       );
     }
 
