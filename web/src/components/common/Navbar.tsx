@@ -33,6 +33,9 @@ export function Navbar() {
     if (pathname === '/') {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.location.hash) {
+        window.history.pushState(null, '', window.location.pathname);
+      }
     }
   };
 
@@ -41,7 +44,7 @@ export function Navbar() {
       e.preventDefault();
       const el = document.getElementById(targetId);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         window.history.pushState(null, '', `#${targetId}`);
       }
     }
@@ -93,14 +96,14 @@ export function Navbar() {
         {/* Navigation Links (Centered in Middle) */}
         <nav className="hidden md:flex items-center gap-8 text-xs font-mono font-bold uppercase tracking-wider text-[#524d43] absolute left-1/2 -translate-x-1/2">
           <a
-            href="#how-it-works"
+            href="/#how-it-works"
             onClick={(e) => handleSectionScroll(e, 'how-it-works')}
             className="hover:text-[#1a1a1a] hover:underline transition-colors cursor-pointer"
           >
             How It Works
           </a>
           <a
-            href="#docs"
+            href="/#docs"
             onClick={(e) => handleSectionScroll(e, 'docs')}
             className="hover:text-[#1a1a1a] hover:underline transition-colors cursor-pointer"
           >

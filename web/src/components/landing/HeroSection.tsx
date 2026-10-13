@@ -122,7 +122,17 @@ export function HeroSection() {
                 Get Started Free →
               </Button>
             </Link>
-            <a href="#docs">
+            <a
+              href="#docs"
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById('docs');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  window.history.pushState(null, '', '#docs');
+                }
+              }}
+            >
               <Button variant="outline" size="lg">
                 Read Docs
               </Button>

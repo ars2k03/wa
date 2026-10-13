@@ -123,7 +123,7 @@ export function CodePreview() {
   };
 
   return (
-    <section id="docs" className="border-b-2 border-[#1a1a1a] bg-[#ede5d3] px-4 py-16">
+    <section id="docs" className="scroll-mt-20 border-b-2 border-[#1a1a1a] bg-[#ede5d3] px-4 py-16">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <div className="font-mono text-xs font-bold text-[#7a2020] uppercase tracking-wider">
