@@ -57,13 +57,13 @@ function DashboardContent() {
         };
       case 'tester':
         return {
-          title: 'Live Message Dispatcher',
-          desc: 'Simulate and verify real-time WhatsApp OTP and message transmissions',
+          title: 'Playground',
+          desc: 'Send test messages and verify your WhatsApp connection in real time',
         };
       case 'logs':
         return {
-          title: 'Message Delivery Ledger',
-          desc: 'Audit real-time delivery logs, latency metrics, and dispatch receipts',
+          title: 'Message Logs',
+          desc: 'View real-time delivery status and history of sent WhatsApp messages',
         };
       default:
         return {

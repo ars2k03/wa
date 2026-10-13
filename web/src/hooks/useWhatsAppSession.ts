@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import type { SessionInfo, WhatsAppConnectionStatus } from '@/types/types';
 
-// Poll fast while the user is mid-link so the result shows up quickly; slow down otherwise
-const FAST_POLL_MS = 1500;
+// Poll faster while the user is mid-link so the result shows up quickly; slow down otherwise.
+// Keep FAST_POLL_MS >= 2000: the backend throttles each route to 30 req/min per IP.
+const FAST_POLL_MS = 2500;
 const SLOW_POLL_MS = 5000;
 
 export function useWhatsAppSession(initialSessionId: string = 'default') {
