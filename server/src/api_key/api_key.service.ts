@@ -27,6 +27,18 @@ export class ApiKeyService {
   async createApiKey(body: CreateApiKeyDto) {
     const { userId, name = 'Default Key', sessionId } = body;
 
+    // Ensure linked session belongs to this user if specified
+    if (sessionId && userId) {
+      const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
+        where: { sessionId },
+      });
+      if (sessionRecord && sessionRecord.userId !== userId) {
+        throw new ForbiddenException(
+          `You cannot link session "${sessionId}" because it belongs to another user`,
+        );
+      }
+    }
+
     // Ensure the user exists in database, or create a default user record
     await this.prisma.user.upsert({
       where: { id: userId },
@@ -126,6 +138,20 @@ export class ApiKeyService {
     }
 
     const { sessionId } = body;
+
+    // Ensure linked session belongs to this user if specified
+    if (sessionId && (userId || existing.userId)) {
+      const ownerId = userId || existing.userId;
+      const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
+        where: { sessionId },
+      });
+      if (sessionRecord && sessionRecord.userId !== ownerId) {
+        throw new ForbiddenException(
+          `You cannot link session "${sessionId}" because it belongs to another user`,
+        );
+      }
+    }
+
     const updated = await this.prisma.apiKey.update({
       where: { id: keyId },
       data: { sessionId },

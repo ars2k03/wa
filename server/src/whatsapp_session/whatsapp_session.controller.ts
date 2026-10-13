@@ -10,11 +10,12 @@ export class WhatsappSessionController {
   constructor(private readonly sessionService: WhatsappSessionService) {}
 
   @Get()
-  getAllSessions() {
+  async getAllSessions(@Req() req: AuthenticatedRequest) {
+    const sessions = await this.sessionService.getAllSessions(req.user?.id);
     return {
       statusCode: HttpStatus.OK,
       success: true,
-      data: this.sessionService.getAllSessions(),
+      data: sessions,
     };
   }
 
@@ -37,8 +38,11 @@ export class WhatsappSessionController {
   }
 
   @Get(':sessionId/status')
-  getSessionStatus(@Param('sessionId') sessionId: string) {
-    const status = this.sessionService.getSessionStatus(sessionId);
+  async getSessionStatus(
+    @Param('sessionId') sessionId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const status = await this.sessionService.getSessionStatus(sessionId, req.user?.id);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -50,8 +54,9 @@ export class WhatsappSessionController {
   async requestPairingCode(
     @Param('sessionId') sessionId: string,
     @Body() body: PairingCodeDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const code = await this.sessionService.requestPairingCode(sessionId, body);
+    const code = await this.sessionService.requestPairingCode(sessionId, body, req.user?.id);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -64,8 +69,11 @@ export class WhatsappSessionController {
   }
 
   @Delete(':sessionId')
-  async deleteSession(@Param('sessionId') sessionId: string) {
-    await this.sessionService.deleteSession(sessionId);
+  async deleteSession(
+    @Param('sessionId') sessionId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.sessionService.deleteSession(sessionId, req.user?.id);
     return {
       statusCode: HttpStatus.OK,
       success: true,

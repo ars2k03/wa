@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
 import { ApiKeyGuard, type AuthenticatedRequest as AuthenticatedApiKeyRequest } from '../api_key/guards/api-key.guard.js';
@@ -18,9 +18,26 @@ export class WhatsappController {
     @Body() body: SendOtpDto,
     @Req() req: AuthenticatedApiKeyRequest,
   ) {
-    const targetSessionId = req.sessionId || body.sessionId || 'default';
+    const apiKeyUserId = req.apiKeyRecord?.userId;
+    let targetSessionId = req.sessionId;
 
-    const result = await this.whatsappService.sendOtpCode(body, req.sessionId);
+    if (!targetSessionId && body.sessionId) {
+      if (apiKeyUserId) {
+        const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
+          where: { sessionId: body.sessionId },
+        });
+        if (sessionRecord && sessionRecord.userId !== apiKeyUserId) {
+          throw new ForbiddenException(
+            `You do not have permission to dispatch messages via session "${body.sessionId}"`,
+          );
+        }
+      }
+      targetSessionId = body.sessionId;
+    }
+
+    targetSessionId = targetSessionId || 'default';
+
+    const result = await this.whatsappService.sendOtpCode(body, targetSessionId, apiKeyUserId);
 
     // Audit log in database
     void this.prisma.messageLog

@@ -13,19 +13,20 @@ export class WhatsappService {
   async sendOtpCode(
     body: SendOtpDto,
     overrideSessionId?: string,
+    userId?: string,
   ): Promise<{ messageId: string; recipientJid: string; senderSession: string }> {
     const { phoneNumber, otp, sessionId: dtoSessionId } = body;
     const sessionId = overrideSessionId || dtoSessionId || 'default';
 
-    const { socket, jid, userId } = await this.getRecipient(sessionId, phoneNumber);
+    const { socket, jid, userId: senderJid } = await this.getRecipient(sessionId, phoneNumber, userId);
     const content = createOtpCopyMessage(otp);
 
     const { generateWAMessageFromContent, generateMessageIDV2 } =
       await import('baileys');
 
     const message = generateWAMessageFromContent(jid, content, {
-      userJid: userId,
-      messageId: generateMessageIDV2(userId),
+      userJid: senderJid,
+      messageId: generateMessageIDV2(senderJid),
     });
 
     await socket.relayMessage(jid, message.message!, {
@@ -40,8 +41,8 @@ export class WhatsappService {
     };
   }
 
-  private async getRecipient(sessionId: string, phoneNumber: string) {
-    const socket = this.sessionService.getConnectedSocket(sessionId);
+  private async getRecipient(sessionId: string, phoneNumber: string, userId?: string) {
+    const socket = this.sessionService.getConnectedSocket(sessionId, userId);
 
     let number = phoneNumber.replace(/\D/g, '');
 

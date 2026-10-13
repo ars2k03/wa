@@ -5,12 +5,13 @@ import { WhatsappSessionService } from './whatsapp_session/whatsapp_session.serv
 export class AppService {
   constructor(private readonly sessionService: WhatsappSessionService) {}
 
-  getStatus() {
+  async getStatus() {
+    const sessionInfo = await this.sessionService.getSessionStatus();
     return {
       statusCode: HttpStatus.OK,
       success: true,
       service: 'WhatsApp OTP Gateway',
-      status: this.sessionService.getSessionStatus().status,
+      status: sessionInfo.status,
       timestamp: new Date().toLocaleString(),
     };
   }

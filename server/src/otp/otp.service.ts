@@ -11,6 +11,8 @@ export class OtpService {
   private readonly logger = new Logger(OtpService.name);
   private readonly oauth2Client;
   private readonly senderEmail: string;
+  private readonly failedAttempts = new Map<string, number>();
+  private readonly MAX_OTP_ATTEMPTS = 5;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -51,6 +53,9 @@ export class OtpService {
     const otp = randomInt(100000, 1000000).toString();
     const hashedOtp = createHash('sha256').update(otp).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    // Reset any previous failed attempts when a fresh OTP is dispatched
+    this.failedAttempts.delete(email.toLowerCase());
 
     // Save hashed OTP to user record
     await this.prisma.user.update({
@@ -95,14 +100,48 @@ export class OtpService {
       throw new BadRequestException('Verification code has expired. Please request a new code.');
     }
 
+    const emailKey = email.toLowerCase();
+    const currentAttempts = this.failedAttempts.get(emailKey) || 0;
+
+    if (currentAttempts >= this.MAX_OTP_ATTEMPTS) {
+      await this.prisma.user.update({
+        where: { email },
+        data: { otpCode: null, otpExpiresAt: null },
+      });
+      this.failedAttempts.delete(emailKey);
+      throw new BadRequestException(
+        'Too many failed verification attempts. This code has been invalidated. Please request a new code.',
+      );
+    }
+
     const incomingHash = createHash('sha256').update(otp).digest('hex');
     const isCodeMatch =
       user.otpCode.length === incomingHash.length &&
       timingSafeEqual(Buffer.from(user.otpCode), Buffer.from(incomingHash));
 
     if (!isCodeMatch) {
-      throw new BadRequestException('Invalid verification code');
+      const newAttempts = currentAttempts + 1;
+      this.failedAttempts.set(emailKey, newAttempts);
+
+      if (newAttempts >= this.MAX_OTP_ATTEMPTS) {
+        await this.prisma.user.update({
+          where: { email },
+          data: { otpCode: null, otpExpiresAt: null },
+        });
+        this.failedAttempts.delete(emailKey);
+        throw new BadRequestException(
+          'Too many failed verification attempts. This code has been invalidated. Please request a new code.',
+        );
+      }
+
+      const remaining = this.MAX_OTP_ATTEMPTS - newAttempts;
+      throw new BadRequestException(
+        `Invalid verification code. You have ${remaining} attempt(s) remaining.`,
+      );
     }
+
+    // Reset failed attempts on successful verification
+    this.failedAttempts.delete(emailKey);
 
     // Mark as verified & clear OTP
     await this.prisma.user.update({

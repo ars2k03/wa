@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ApiKeyService } from './api_key.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
 import { LinkSessionDto } from './dto/link-session.dto.js';
@@ -32,7 +32,11 @@ export class ApiKeyController {
     @Req() req: AuthenticatedRequest,
   ) {
     // Prevent IDOR: users can only view their own API keys
-    const userId = req.user?.id || paramUserId;
+    const currentUserId = req.user?.id;
+    if (currentUserId && paramUserId !== 'me' && paramUserId !== currentUserId) {
+      throw new ForbiddenException('You cannot access another user\'s API keys');
+    }
+    const userId = currentUserId || paramUserId;
     const keys = await this.apiKeyService.getUserApiKeys(userId);
     return {
       statusCode: HttpStatus.OK,

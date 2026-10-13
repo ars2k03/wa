@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import QRCode from 'qrcode';
 import pino from 'pino';
@@ -100,9 +100,43 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     );
 
     for (const sessionId of savedSessions) {
-      void this.initSession(sessionId).catch((err) => {
-        this.logger.error(`Error restoring session "${sessionId}":`, err);
-      });
+      void (async () => {
+        try {
+          const dbRecord = await this.prisma.whatsAppSessionRecord.findUnique({
+            where: { sessionId },
+            select: { userId: true },
+          });
+          await this.initSession(sessionId, dbRecord?.userId);
+        } catch (err) {
+          this.logger.error(`Error restoring session "${sessionId}":`, err);
+        }
+      })();
+    }
+  }
+
+  /**
+   * Prevents IDOR by verifying that the requesting user owns the session
+   */
+  async verifySessionOwnership(sessionId: string, userId?: string): Promise<void> {
+    if (!userId) return;
+
+    // Check in-memory session owner
+    const memorySession = this.sessions.get(sessionId);
+    if (memorySession?.userId && memorySession.userId !== userId) {
+      throw new ForbiddenException(
+        `You do not have permission to access session "${sessionId}"`,
+      );
+    }
+
+    // Check PostgreSQL database owner
+    const dbRecord = await this.prisma.whatsAppSessionRecord.findUnique({
+      where: { sessionId },
+      select: { userId: true },
+    });
+    if (dbRecord && dbRecord.userId !== userId) {
+      throw new ForbiddenException(
+        `You do not have permission to access session "${sessionId}"`,
+      );
     }
   }
 
@@ -114,11 +148,21 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     body?: InitSessionDto | string,
   ): Promise<SessionInfo> {
     const userId = typeof body === 'object' && body ? body.userId : body;
+
+    // Prevent IDOR: Check ownership before initializing or reusing an existing session
+    if (userId) {
+      await this.verifySessionOwnership(sessionId, userId);
+    }
+
     const existing = this.sessions.get(sessionId);
     if (
       existing &&
       (existing.status === 'connected' || existing.status === 'connecting')
     ) {
+      if (userId && !existing.userId) {
+        existing.userId = userId;
+        await this.syncSessionToDatabase(existing);
+      }
       return this.toSessionInfo(existing);
     }
 
@@ -257,7 +301,12 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
   async requestPairingCode(
     sessionId: string,
     body: PairingCodeDto | string,
+    userId?: string,
   ): Promise<string> {
+    if (userId) {
+      await this.verifySessionOwnership(sessionId, userId);
+    }
+
     const phoneNumber = typeof body === 'string' ? body : body.phoneNumber;
     const session = this.sessions.get(sessionId);
     if (!session || !session.socket) {
@@ -281,7 +330,14 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  getSessionStatus(sessionId: string = this.defaultSessionId): SessionInfo {
+  async getSessionStatus(
+    sessionId: string = this.defaultSessionId,
+    userId?: string,
+  ): Promise<SessionInfo> {
+    if (userId) {
+      await this.verifySessionOwnership(sessionId, userId);
+    }
+
     const session = this.sessions.get(sessionId);
     if (!session) {
       return {
@@ -295,13 +351,40 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     return this.toSessionInfo(session);
   }
 
-  getAllSessions(): SessionInfo[] {
-    return Array.from(this.sessions.values()).map((s) =>
-      this.toSessionInfo(s),
-    );
+  async getAllSessions(userId?: string): Promise<SessionInfo[]> {
+    if (!userId) {
+      return Array.from(this.sessions.values()).map((s) =>
+        this.toSessionInfo(s),
+      );
+    }
+
+    // Query all sessions created by this user
+    const dbSessions = await this.prisma.whatsAppSessionRecord.findMany({
+      where: { userId },
+      select: { sessionId: true },
+    });
+    const userSessionIds = new Set(dbSessions.map((s) => s.sessionId));
+
+    // Also include any active memory sessions created by this user
+    for (const [id, s] of this.sessions.entries()) {
+      if (s.userId === userId) {
+        userSessionIds.add(id);
+      }
+    }
+
+    const result: SessionInfo[] = [];
+    for (const id of userSessionIds) {
+      const info = await this.getSessionStatus(id, userId);
+      result.push(info);
+    }
+    return result;
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
+  async deleteSession(sessionId: string, userId?: string): Promise<void> {
+    if (userId) {
+      await this.verifySessionOwnership(sessionId, userId);
+    }
+
     const session = this.sessions.get(sessionId);
     if (session) {
       if (session.reconnectTimer) {
@@ -332,8 +415,18 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     this.logger.log(`Session "${sessionId}" deleted.`);
   }
 
-  getConnectedSocket(sessionId: string = this.defaultSessionId): WASocket {
+  getConnectedSocket(
+    sessionId: string = this.defaultSessionId,
+    userId?: string,
+  ): WASocket {
     const session = this.sessions.get(sessionId);
+
+    if (userId && session?.userId && session.userId !== userId) {
+      throw new ForbiddenException(
+        `You do not have permission to access session "${sessionId}"`,
+      );
+    }
+
     const socket = session?.socket;
 
     if (!socket?.user || session?.status !== 'connected') {

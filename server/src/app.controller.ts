@@ -10,7 +10,7 @@ export class AppController {
   ) {}
 
   @Get()
-  index() {
+  async index() {
     return this.appService.getStatus();
   }
 
