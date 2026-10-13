@@ -4,10 +4,12 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { WhatsappModule } from './whatsapp/whatsapp.module.js';
 import { WhatsappSessionModule } from './whatsapp_session/whatsapp_session.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
     WhatsappSessionModule,
     WhatsappModule,
   ],

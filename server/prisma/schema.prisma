@@ -1,0 +1,71 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  apiKeys  ApiKey[]
+  sessions WhatsAppSessionRecord[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  key        String    @unique
+  name       String    @default("Default Key")
+  userId     String    @map("user_id")
+  sessionId  String?   @map("session_id")
+  isActive   Boolean   @default(true) @map("is_active")
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([key])
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model WhatsAppSessionRecord {
+  id          String   @id @default(uuid())
+  sessionId   String   @unique @map("session_id")
+  userId      String   @map("user_id")
+  phoneNumber String?  @map("phone_number")
+  status      String   @default("disconnected")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([userId])
+  @@map("whatsapp_sessions")
+}
+
+model MessageLog {
+  id          String   @id @default(uuid())
+  sessionId   String   @map("session_id")
+  apiKey      String?  @map("api_key")
+  recipient   String
+  messageType String   @default("otp") @map("message_type")
+  messageId   String?  @map("message_id")
+  status      String   @default("sent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([sessionId])
+  @@index([apiKey])
+  @@map("message_logs")
+}
