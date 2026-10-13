@@ -5,7 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { OtpService } from '../otp/otp.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import type { AuthenticatedUser, JwtPayload } from './interfaces/jwt-payload.interface.js';
@@ -15,6 +17,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly otpService: OtpService,
   ) {}
 
   async register(body: RegisterDto) {
@@ -24,34 +27,47 @@ export class AuthService {
 
     const email = body.email.trim().toLowerCase();
     const name = body.name?.trim() || email.split('@')[0];
+    const password = body.password ? await bcrypt.hash(body.password, 10) : null;
 
-    // Find existing or create new
+    // Check existing user
     let user = await this.prisma.user.findUnique({
       where: { email },
     });
+
+    if (user && user.isVerified) {
+      throw new BadRequestException('An account with this email already exists. Please log in.');
+    }
 
     if (!user) {
       user = await this.prisma.user.create({
         data: {
           email,
           name,
+          password,
+          isVerified: false,
+        },
+      });
+    } else {
+      // Update unverified user credentials
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name,
+          password,
         },
       });
     }
 
-    const token = await this.generateToken(user.id, user.email, user.name);
+    // Send 6-digit OTP via official Gmail API
+    await this.otpService.sendOtp(email);
 
     return {
       statusCode: HttpStatus.CREATED,
       success: true,
-      message: 'Account registered successfully',
+      message: 'Account created. Please check your email for the 6-digit verification code.',
       data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        },
-        token,
+        email: user.email,
+        isVerified: false,
       },
     };
   }
@@ -63,18 +79,40 @@ export class AuthService {
 
     const email = body.email.trim().toLowerCase();
 
-    let user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      // Auto-create for seamless onboarding
-      user = await this.prisma.user.create({
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Verify password if one was set
+    if (user.password && body.password) {
+      const isValid = await bcrypt.compare(body.password, user.password);
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+    }
+
+    // Check verification status
+    if (!user.isVerified) {
+      // Auto-dispatch fresh OTP for convenience
+      try {
+        await this.otpService.sendOtp(email);
+      } catch {
+        /* ignore delivery error on login attempt */
+      }
+
+      return {
+        statusCode: HttpStatus.FORBIDDEN,
+        success: false,
+        isVerified: false,
+        message: 'Account not verified. A new 6-digit verification code has been sent to your email.',
         data: {
-          email,
-          name: email.split('@')[0],
+          email: user.email,
         },
-      });
+      };
     }
 
     const token = await this.generateToken(user.id, user.email, user.name);
@@ -82,6 +120,7 @@ export class AuthService {
     return {
       statusCode: HttpStatus.OK,
       success: true,
+      isVerified: true,
       message: 'Login successful',
       data: {
         user: {

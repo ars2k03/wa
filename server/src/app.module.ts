@@ -7,12 +7,14 @@ import { WhatsappSessionModule } from './whatsapp_session/whatsapp_session.modul
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ApiKeyModule } from './api_key/api_key.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { OtpModule } from './otp/otp.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
+    OtpModule,
     ApiKeyModule,
     WhatsappSessionModule,
     WhatsappModule,

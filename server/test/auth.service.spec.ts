@@ -7,11 +7,14 @@ describe('AuthService', () => {
   let prismaMock: any;
   let jwtMock: any;
 
+  let otpMock: any;
+
   beforeEach(() => {
     prismaMock = {
       user: {
         findUnique: vi.fn(),
         create: vi.fn(),
+        update: vi.fn(),
       },
     };
 
@@ -20,7 +23,12 @@ describe('AuthService', () => {
       verifyAsync: vi.fn(),
     };
 
-    authService = new AuthService(prismaMock, jwtMock);
+    otpMock = {
+      sendOtp: vi.fn().mockResolvedValue({ success: true, message: 'OTP sent' }),
+      verifyOtp: vi.fn().mockResolvedValue({ success: true, message: 'Verified' }),
+    };
+
+    authService = new AuthService(prismaMock, jwtMock, otpMock);
   });
 
   describe('register', () => {
@@ -30,12 +38,13 @@ describe('AuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('creates a new user and generates a token', async () => {
+    it('creates a new user and triggers OTP dispatch', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
       prismaMock.user.create.mockResolvedValue({
         id: 'user_1',
         email: 'test@example.com',
         name: 'test',
+        isVerified: false,
       });
 
       const result = await authService.register({
@@ -43,9 +52,8 @@ describe('AuthService', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.token).toBe('mock_jwt_token_123');
-      expect(result.data.user.email).toBe('test@example.com');
-      expect(jwtMock.signAsync).toHaveBeenCalled();
+      expect(result.data.email).toBe('test@example.com');
+      expect(otpMock.sendOtp).toHaveBeenCalledWith('test@example.com');
     });
   });
 
@@ -56,11 +64,12 @@ describe('AuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('returns token for existing user', async () => {
+    it('returns token for verified user', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
         id: 'user_1',
         email: 'existing@example.com',
         name: 'Existing User',
+        isVerified: true,
       });
 
       const result = await authService.login({
@@ -68,8 +77,8 @@ describe('AuthService', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.user.name).toBe('Existing User');
-      expect(result.data.token).toBe('mock_jwt_token_123');
+      expect((result.data as any)?.user?.name).toBe('Existing User');
+      expect((result.data as any)?.token).toBe('mock_jwt_token_123');
     });
   });
 
