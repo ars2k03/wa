@@ -46,7 +46,7 @@ function DashboardContent() {
               : 'CENTRAL DISPATCH STATION'}
           </h2>
           <p className="font-serif text-xs sm:text-sm text-[#524d43]">
-            Targeting High-Velocity Gateway running on <span className="font-mono font-bold text-[#1a1a1a]">http://localhost:3002</span>
+            Targeting High-Velocity Gateway running on <span className="font-mono font-bold text-[#1a1a1a]">{process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}</span>
           </p>
         </div>
 

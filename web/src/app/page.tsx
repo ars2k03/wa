@@ -5,7 +5,6 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Navbar } from '@/components/common/Navbar';
 import { Footer } from '@/components/common/Footer';
 import { HeroSection } from '@/components/landing/HeroSection';
-import { FeatureGrid } from '@/components/landing/FeatureGrid';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { CodePreview } from '@/components/landing/CodePreview';
 
@@ -16,7 +15,6 @@ export default function LandingPage() {
         <Navbar />
         <main className="flex-1">
           <HeroSection />
-          <FeatureGrid />
           <HowItWorks />
           <CodePreview />
         </main>

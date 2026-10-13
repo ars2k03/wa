@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "THE TELEGRAPHIC DISPATCH | Multi-Tenant WhatsApp Gateway",
+  title: "WA Gateway | Modern WhatsApp API for Developers",
   description:
-    "A bespoke high-throughput WhatsApp OTP & Notification Gateway engineered with editorial precision and retro brutalist reliability.",
+    "Connect in seconds, generate API keys, and automate WhatsApp OTPs & alerts via simple REST endpoints.",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased scroll-smooth">
       <body className="min-h-full flex flex-col bg-[#fbf8f1] text-[#1a1a1a] selection:bg-[#7a2020] selection:text-[#fbf8f1]">
         {children}
       </body>

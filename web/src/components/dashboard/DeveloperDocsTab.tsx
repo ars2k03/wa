@@ -16,9 +16,11 @@ export function DeveloperDocsTab() {
     }
   };
 
-  const curlExample = `curl -X POST "http://localhost:3002/send-otp" \\
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
+  const curlExample = `curl -X POST "${apiUrl}/send-otp" \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: _ars_2k03_your_secret_api_key" \\
+  -H "x-api-key: your_api_key_here" \\
   -d '{
     "phoneNumber": "+8801700000000",
     "otp": "940214",

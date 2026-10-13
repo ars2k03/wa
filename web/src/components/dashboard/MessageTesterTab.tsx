@@ -254,7 +254,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
 
               {/* Static Reference Box */}
               <div className="border-t border-[#333333] pt-3 text-[11px] text-[#a3a3a3] space-y-1">
-                <div>GATEWAY: http://localhost:3002</div>
+                <div>GATEWAY: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}</div>
                 <div>METHOD: POST /send-otp</div>
                 <div>AUTH: x-api-key</div>
               </div>
