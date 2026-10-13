@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
   Req,
@@ -55,6 +56,19 @@ export class WhatsappController {
       success: true,
       message: 'OTP sent successfully',
       data: result,
+    };
+  }
+
+  @Get('message-logs')
+  async getMessageLogs(@Req() req: any) {
+    const logs = await this.prisma.messageLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      data: logs,
     };
   }
 }
