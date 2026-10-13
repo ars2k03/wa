@@ -1,16 +1,16 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { WhatsappService } from './whatsapp/whatsapp.service.js';
+import { WhatsappSessionService } from './whatsapp_session/whatsapp_session.service.js';
 
 @Injectable()
 export class AppService {
-  constructor(private readonly whatsappService: WhatsappService) {}
+  constructor(private readonly sessionService: WhatsappSessionService) {}
 
   getStatus() {
     return {
       statusCode: HttpStatus.OK,
       success: true,
       service: 'WhatsApp OTP Gateway',
-      status: this.whatsappService.getConnectionStatus(),
+      status: this.sessionService.getSessionStatus().status,
       timestamp: new Date().toLocaleString(),
     };
   }

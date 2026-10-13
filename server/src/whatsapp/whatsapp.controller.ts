@@ -9,6 +9,7 @@ export class WhatsappController {
   @Post('send-otp')
   async sendOtp(@Body() body: SendOtpDto) {
     const result = await this.whatsappService.sendOtpCode({
+      sessionId: body.sessionId,
       phoneNumber: body.phoneNumber,
       otp: body.otp,
     });
