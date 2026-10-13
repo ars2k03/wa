@@ -1,7 +1,8 @@
 import { Body, Controller, Get, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
-import { ApiKeyGuard, type AuthenticatedRequest } from '../api_key/guards/api-key.guard.js';
+import { ApiKeyGuard, type AuthenticatedRequest as AuthenticatedApiKeyRequest } from '../api_key/guards/api-key.guard.js';
+import { AuthGuard, type AuthenticatedRequest as AuthenticatedUserRequest } from '../auth/guards/auth.guard.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Controller()
@@ -15,7 +16,7 @@ export class WhatsappController {
   @UseGuards(ApiKeyGuard)
   async sendOtp(
     @Body() body: SendOtpDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedApiKeyRequest,
   ) {
     const targetSessionId = req.sessionId || body.sessionId || 'default';
 
@@ -44,11 +45,37 @@ export class WhatsappController {
   }
 
   @Get('message-logs')
-  async getMessageLogs(@Req() _req: any) {
+  @UseGuards(AuthGuard)
+  async getMessageLogs(@Req() req: AuthenticatedUserRequest) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        data: [],
+      };
+    }
+
+    const [userApiKeys, userSessions] = await Promise.all([
+      this.prisma.apiKey.findMany({ where: { userId }, select: { key: true } }),
+      this.prisma.whatsAppSessionRecord.findMany({ where: { userId }, select: { sessionId: true } }),
+    ]);
+
+    const keys = userApiKeys.map((k) => k.key);
+    const sessionIds = userSessions.map((s) => s.sessionId);
+
     const logs = await this.prisma.messageLog.findMany({
+      where: {
+        OR: [
+          { apiKey: { in: keys } },
+          { sessionId: { in: sessionIds } },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
+
     return {
       statusCode: HttpStatus.OK,
       success: true,

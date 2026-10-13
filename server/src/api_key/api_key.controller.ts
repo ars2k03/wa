@@ -1,14 +1,22 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ApiKeyService } from './api_key.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
 import { LinkSessionDto } from './dto/link-session.dto.js';
+import { AuthGuard, type AuthenticatedRequest } from '../auth/guards/auth.guard.js';
 
 @Controller('api-keys')
+@UseGuards(AuthGuard)
 export class ApiKeyController {
   constructor(private readonly apiKeyService: ApiKeyService) {}
 
   @Post()
-  async createApiKey(@Body() body: CreateApiKeyDto) {
+  async createApiKey(
+    @Body() body: CreateApiKeyDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (req.user?.id) {
+      body.userId = req.user.id;
+    }
     const apiKey = await this.apiKeyService.createApiKey(body);
     return {
       statusCode: HttpStatus.CREATED,
@@ -19,7 +27,12 @@ export class ApiKeyController {
   }
 
   @Get(':userId')
-  async getUserApiKeys(@Param('userId') userId: string) {
+  async getUserApiKeys(
+    @Param('userId') paramUserId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    // Prevent IDOR: users can only view their own API keys
+    const userId = req.user?.id || paramUserId;
     const keys = await this.apiKeyService.getUserApiKeys(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -32,8 +45,9 @@ export class ApiKeyController {
   async linkSession(
     @Param('keyId') keyId: string,
     @Body() body: LinkSessionDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const updated = await this.apiKeyService.linkSessionToKey(keyId, body);
+    const updated = await this.apiKeyService.linkSessionToKey(keyId, body, req.user?.id);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -43,8 +57,11 @@ export class ApiKeyController {
   }
 
   @Delete(':keyId')
-  async revokeApiKey(@Param('keyId') keyId: string) {
-    const revoked = await this.apiKeyService.revokeApiKey(keyId);
+  async revokeApiKey(
+    @Param('keyId') keyId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const revoked = await this.apiKeyService.revokeApiKey(keyId, req.user?.id);
     return {
       statusCode: HttpStatus.OK,
       success: true,

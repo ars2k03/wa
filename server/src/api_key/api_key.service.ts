@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
@@ -112,7 +112,19 @@ export class ApiKeyService {
   /**
    * Links or updates a WhatsApp session ID for an API Key
    */
-  async linkSessionToKey(keyId: string, body: LinkSessionDto) {
+  async linkSessionToKey(keyId: string, body: LinkSessionDto, userId?: string) {
+    const existing = await this.prisma.apiKey.findUnique({
+      where: { id: keyId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`API Key "${keyId}" not found`);
+    }
+
+    if (userId && existing.userId !== userId) {
+      throw new ForbiddenException('You do not have permission to modify this API key');
+    }
+
     const { sessionId } = body;
     const updated = await this.prisma.apiKey.update({
       where: { id: keyId },
@@ -137,13 +149,17 @@ export class ApiKeyService {
   /**
    * Revokes (deactivates) an API Key
    */
-  async revokeApiKey(keyId: string) {
+  async revokeApiKey(keyId: string, userId?: string) {
     const record = await this.prisma.apiKey.findUnique({
       where: { id: keyId },
     });
 
     if (!record) {
       throw new NotFoundException(`API Key "${keyId}" not found`);
+    }
+
+    if (userId && record.userId !== userId) {
+      throw new ForbiddenException('You do not have permission to revoke this API key');
     }
 
     const updated = await this.prisma.apiKey.update({

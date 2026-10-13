@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
@@ -46,20 +47,21 @@ export class OtpService {
       throw new NotFoundException('No account found with this email address');
     }
 
-    // Generate secure 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate cryptographically secure 6-digit OTP
+    const otp = randomInt(100000, 1000000).toString();
+    const hashedOtp = createHash('sha256').update(otp).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
-    // Save to user record
+    // Save hashed OTP to user record
     await this.prisma.user.update({
       where: { email },
       data: {
-        otpCode: otp,
+        otpCode: hashedOtp,
         otpExpiresAt: expiresAt,
       },
     });
 
-    this.logger.log(`Generated OTP for ${email}: ${otp}`);
+    this.logger.log(`Dispatched verification OTP to email: ${email}`);
 
     // Dispatch email using official Gmail API
     await this.sendGmailMessage(
@@ -89,12 +91,17 @@ export class OtpService {
       throw new BadRequestException('No verification code was requested or code has already been used');
     }
 
-    if (user.otpCode !== otp) {
-      throw new BadRequestException('Invalid verification code');
-    }
-
     if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
       throw new BadRequestException('Verification code has expired. Please request a new code.');
+    }
+
+    const incomingHash = createHash('sha256').update(otp).digest('hex');
+    const isCodeMatch =
+      user.otpCode.length === incomingHash.length &&
+      timingSafeEqual(Buffer.from(user.otpCode), Buffer.from(incomingHash));
+
+    if (!isCodeMatch) {
+      throw new BadRequestException('Invalid verification code');
     }
 
     // Mark as verified & clear OTP

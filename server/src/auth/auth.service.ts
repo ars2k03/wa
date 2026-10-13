@@ -74,12 +74,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Verify password if one was set
-    if (user.password && password) {
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        throw new UnauthorizedException('Invalid email or password');
-      }
+    if (!user.password || !password) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     // Check verification status
@@ -143,31 +144,7 @@ export class AuthService {
 
     const cleanToken = rawToken.replace(/^Bearer\s+/i, '').trim();
 
-    // 1. Check legacy base64 token format ("usr_tok_<base64>") for seamless backward compatibility
-    if (cleanToken.startsWith('usr_tok_')) {
-      try {
-        const userId = Buffer.from(
-          cleanToken.replace('usr_tok_', ''),
-          'base64',
-        ).toString('utf8');
-
-        const user = await this.prisma.user.findUnique({
-          where: { id: userId },
-        });
-
-        if (user) {
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-          };
-        }
-      } catch {
-        throw new UnauthorizedException('Invalid legacy token format');
-      }
-    }
-
-    // 2. Validate standard signed JWT
+    // Validate standard signed cryptographic JWT
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(cleanToken);
       const user = await this.prisma.user.findUnique({

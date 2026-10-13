@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import bcrypt from 'bcryptjs';
 import { AuthService } from '../src/auth/auth.service.js';
 import { UnauthorizedException } from '@nestjs/common';
 import { validate } from 'class-validator';
@@ -62,7 +63,13 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('fails DTO validation if email is invalid or missing', async () => {
-      const dto = plainToInstance(LoginDto, { email: '' });
+      const dto = plainToInstance(LoginDto, { email: '', password: 'password123' });
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('fails DTO validation if password is missing', async () => {
+      const dto = plainToInstance(LoginDto, { email: 'test@example.com' });
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
     });
@@ -70,20 +77,41 @@ describe('AuthService', () => {
     it('throws UnauthorizedException if user does not exist', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
       await expect(
-        authService.login({ email: 'nonexistent@example.com' }),
+        authService.login({ email: 'nonexistent@example.com', password: 'password123' }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('returns token for verified user', async () => {
+    it('throws UnauthorizedException if password is incorrect', async () => {
+      const hashedPassword = await bcrypt.hash('correct_password', 10);
       prismaMock.user.findUnique.mockResolvedValue({
         id: 'user_1',
         email: 'existing@example.com',
+        password: hashedPassword,
+        name: 'Existing User',
+        isVerified: true,
+      });
+
+      await expect(
+        authService.login({
+          email: 'existing@example.com',
+          password: 'wrong_password',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('returns token for verified user with correct password', async () => {
+      const hashedPassword = await bcrypt.hash('correct_password', 10);
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'user_1',
+        email: 'existing@example.com',
+        password: hashedPassword,
         name: 'Existing User',
         isVerified: true,
       });
 
       const result = await authService.login({
         email: 'existing@example.com',
+        password: 'correct_password',
       });
 
       expect(result.success).toBe(true);
@@ -93,16 +121,13 @@ describe('AuthService', () => {
   });
 
   describe('validateToken', () => {
-    it('validates legacy usr_tok_ tokens', async () => {
+    it('rejects legacy spoofable usr_tok_ tokens', async () => {
       const rawToken = `usr_tok_${Buffer.from('legacy_id').toString('base64')}`;
-      prismaMock.user.findUnique.mockResolvedValue({
-        id: 'legacy_id',
-        email: 'legacy@example.com',
-        name: 'Legacy User',
-      });
+      jwtMock.verifyAsync.mockRejectedValue(new Error('Invalid token'));
 
-      const user = await authService.validateToken(rawToken);
-      expect(user.id).toBe('legacy_id');
+      await expect(authService.validateToken(rawToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('validates standard JWT token', async () => {

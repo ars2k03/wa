@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { WhatsappSessionService } from './whatsapp_session.service.js';
 import { InitSessionDto } from './dto/init-session.dto.js';
 import { PairingCodeDto } from './dto/pairing-code.dto.js';
+import { AuthGuard, type AuthenticatedRequest } from '../auth/guards/auth.guard.js';
 
 @Controller('sessions')
+@UseGuards(AuthGuard)
 export class WhatsappSessionController {
   constructor(private readonly sessionService: WhatsappSessionService) {}
 
@@ -20,7 +22,11 @@ export class WhatsappSessionController {
   async initSession(
     @Param('sessionId') sessionId: string,
     @Body() body: InitSessionDto,
+    @Req() req: AuthenticatedRequest,
   ) {
+    if (req.user?.id) {
+      body.userId = req.user.id;
+    }
     const session = await this.sessionService.initSession(sessionId, body);
     return {
       statusCode: HttpStatus.OK,
