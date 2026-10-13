@@ -38,8 +38,8 @@ export function DashboardNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#fbf8f1] border-b-2 border-[#1a1a1a]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-[#fbf8f1] border-b-2 border-[#1a1a1a] h-16 shrink-0">
+      <div className="w-full px-4 sm:px-6 h-full flex items-center justify-between gap-4">
         {/* Brand & Console Badge (Left) */}
         <div className="flex items-center gap-3">
           <Link

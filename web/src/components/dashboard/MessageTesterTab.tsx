@@ -20,7 +20,6 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
   const [selectedKey, setSelectedKey] = useState<string>(initialKey || '');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [otpCode, setOtpCode] = useState<string>('482910');
-  const [targetSessionId, setTargetSessionId] = useState<string>('default');
 
   const [transmitting, setTransmitting] = useState<boolean>(false);
   const [responseOutput, setResponseOutput] = useState<any | null>(null);
@@ -33,9 +32,6 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
       const activeKey = keys.find((k) => k.isActive);
       if (activeKey) {
         setSelectedKey(activeKey.key);
-        if (activeKey.sessionId) {
-          setTargetSessionId(activeKey.sessionId);
-        }
       }
     }
   }, [keys, selectedKey]);
@@ -64,7 +60,6 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
       const res = await api.sendOtp(selectedKey.trim(), {
         phoneNumber: phoneNumber.trim(),
         otp: otpCode.trim(),
-        sessionId: targetSessionId.trim() || undefined,
       });
 
       const elapsed = Math.round(performance.now() - startTime);
@@ -129,8 +124,6 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                     value={selectedKey}
                     onChange={(e) => {
                       setSelectedKey(e.target.value);
-                      const matched = keys.find((k) => k.key === e.target.value);
-                      if (matched?.sessionId) setTargetSessionId(matched.sessionId);
                     }}
                   >
                     <option value="">-- SELECT FROM YOUR ACTIVE KEYS --</option>
@@ -152,16 +145,6 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                   required
                 />
               </div>
-
-              {/* Target Session */}
-              <Input
-                label="WHATSAPP SESSION IDENTIFIER"
-                value={targetSessionId}
-                onChange={(e) => setTargetSessionId(e.target.value)}
-                placeholder="default"
-                isMono
-                helperText="Session linked to the apparatus (default if unspecified)"
-              />
 
               {/* Recipient Phone */}
               <Input

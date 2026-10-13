@@ -1,23 +1,19 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardTab } from '@/context/DashboardTabContext';
 import { Badge } from '@/components/ui/Badge';
-
 import { DeviceConnectTab } from '@/components/dashboard/DeviceConnectTab';
 import { ApiKeyManagerTab } from '@/components/dashboard/ApiKeyManagerTab';
 import { MessageTesterTab } from '@/components/dashboard/MessageTesterTab';
 import { MessageLogsTab } from '@/components/dashboard/MessageLogsTab';
-import { DeveloperDocsTab } from '@/components/dashboard/DeveloperDocsTab';
-
-type TabType = 'device' | 'keys' | 'tester' | 'logs' | 'docs';
 
 function DashboardContent() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('device');
+  const { activeTab } = useDashboardTab();
   const [activeKeyForTester, setActiveKeyForTester] = useState<string>('');
 
   useEffect(() => {
@@ -28,7 +24,7 @@ function DashboardContent() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-24 flex flex-col items-center justify-center text-center space-y-4">
+      <div className="py-24 flex flex-col items-center justify-center text-center space-y-4">
         <div className="w-10 h-10 border-4 border-[#1a1a1a] border-t-[#7a2020] rounded-full animate-spin" />
         <div className="font-mono text-xs font-bold uppercase tracking-widest text-[#524d43]">
           VERIFYING DISPATCH CREDENTIALS...
@@ -47,88 +43,60 @@ function DashboardContent() {
     setActiveKeyForTester(key);
   };
 
+  const getSectionTitle = () => {
+    switch (activeTab) {
+      case 'device':
+        return {
+          title: 'WhatsApp Device Connection',
+          desc: 'Connect and monitor your WhatsApp device for automated OTP and message delivery',
+        };
+      case 'keys':
+        return {
+          title: 'API Keys & Access Tokens',
+          desc: 'Mint and manage secure API keys to integrate with your external systems',
+        };
+      case 'tester':
+        return {
+          title: 'Live Message Dispatcher',
+          desc: 'Simulate and verify real-time WhatsApp OTP and message transmissions',
+        };
+      case 'logs':
+        return {
+          title: 'Message Delivery Ledger',
+          desc: 'Audit real-time delivery logs, latency metrics, and dispatch receipts',
+        };
+      default:
+        return {
+          title: 'Dispatch Console',
+          desc: 'Manage WhatsApp API integrations',
+        };
+    }
+  };
+
+  const section = getSectionTitle();
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-      {/* Console Masthead Banner */}
-      <div className="border-3 border-[#1a1a1a] bg-[#ede5d3] p-6 shadow-[6px_6px_0px_#1a1a1a] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-black uppercase text-[#7a2020] tracking-widest">
-              OFFICIAL OPERATOR CONTROL DESK
-            </span>
-            <Badge variant="emerald" rotate="right">
-              AUTHENTICATED
-            </Badge>
-          </div>
-          <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#1a1a1a] uppercase tracking-tight">
-            DISPATCH STATION: {user.name || user.email}
-          </h2>
-          <p className="font-serif text-xs sm:text-sm text-[#524d43]">
-            Targeting High-Velocity Gateway running on <span className="font-mono font-bold text-[#1a1a1a]">{process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}</span>
+    <div className="space-y-6 w-full max-w-7xl mx-auto">
+      {/* Clean Workstation Header */}
+      <div className="border-b-2 border-[#1a1a1a] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="font-serif font-black text-2xl sm:text-3xl text-[#1a1a1a] tracking-tight">
+            {section.title}
+          </h1>
+          <p className="font-serif text-xs sm:text-sm text-[#524d43] mt-0.5">
+            {section.desc}
           </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="emerald" rotate="right">
+            OPERATIONAL
+          </Badge>
         </div>
       </div>
 
-      {/* Tab Navigation Navigation Bar */}
-      <div className="border-b-3 border-[#1a1a1a] flex flex-wrap gap-2">
-        <button
-          onClick={() => setActiveTab('device')}
-          className={`px-4 py-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider border-t-2 border-x-2 border-[#1a1a1a] transition-all cursor-pointer ${
-            activeTab === 'device'
-              ? 'bg-[#fbf8f1] text-[#1a1a1a] shadow-[0px_-2px_0px_#7a2020] -mb-[3px] border-b-3 border-b-[#fbf8f1] z-10'
-              : 'bg-[#ede5d3] text-[#524d43] hover:bg-[#f4efe2]'
-          }`}
-        >
-          1. APPARATUS LINK (QR)
-        </button>
-
-        <button
-          onClick={() => setActiveTab('keys')}
-          className={`px-4 py-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider border-t-2 border-x-2 border-[#1a1a1a] transition-all cursor-pointer ${
-            activeTab === 'keys'
-              ? 'bg-[#fbf8f1] text-[#1a1a1a] shadow-[0px_-2px_0px_#7a2020] -mb-[3px] border-b-3 border-b-[#fbf8f1] z-10'
-              : 'bg-[#ede5d3] text-[#524d43] hover:bg-[#f4efe2]'
-          }`}
-        >
-          2. API KEY CONSOLE
-        </button>
-
-        <button
-          onClick={() => setActiveTab('tester')}
-          className={`px-4 py-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider border-t-2 border-x-2 border-[#1a1a1a] transition-all cursor-pointer ${
-            activeTab === 'tester'
-              ? 'bg-[#fbf8f1] text-[#1a1a1a] shadow-[0px_-2px_0px_#7a2020] -mb-[3px] border-b-3 border-b-[#fbf8f1] z-10'
-              : 'bg-[#ede5d3] text-[#524d43] hover:bg-[#f4efe2]'
-          }`}
-        >
-          3. LIVE TESTER (OTP)
-        </button>
-
-        <button
-          onClick={() => setActiveTab('logs')}
-          className={`px-4 py-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider border-t-2 border-x-2 border-[#1a1a1a] transition-all cursor-pointer ${
-            activeTab === 'logs'
-              ? 'bg-[#fbf8f1] text-[#1a1a1a] shadow-[0px_-2px_0px_#7a2020] -mb-[3px] border-b-3 border-b-[#fbf8f1] z-10'
-              : 'bg-[#ede5d3] text-[#524d43] hover:bg-[#f4efe2]'
-          }`}
-        >
-          4. MESSAGE LEDGER
-        </button>
-
-        <button
-          onClick={() => setActiveTab('docs')}
-          className={`px-4 py-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider border-t-2 border-x-2 border-[#1a1a1a] transition-all cursor-pointer ${
-            activeTab === 'docs'
-              ? 'bg-[#fbf8f1] text-[#1a1a1a] shadow-[0px_-2px_0px_#7a2020] -mb-[3px] border-b-3 border-b-[#fbf8f1] z-10'
-              : 'bg-[#ede5d3] text-[#524d43] hover:bg-[#f4efe2]'
-          }`}
-        >
-          5. DOCUMENTATION
-        </button>
-      </div>
-
-      {/* Active Tab Panel Content */}
-      <div className="pt-2 animate-in fade-in duration-150">
+      {/* Active Workstation Body */}
+      <div className="animate-in fade-in duration-150">
         {activeTab === 'device' && (
           <DeviceConnectTab userId={effectiveUserId} />
         )}
@@ -148,8 +116,6 @@ function DashboardContent() {
         )}
 
         {activeTab === 'logs' && <MessageLogsTab />}
-
-        {activeTab === 'docs' && <DeveloperDocsTab />}
       </div>
     </div>
   );

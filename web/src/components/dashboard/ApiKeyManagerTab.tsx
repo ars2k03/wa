@@ -16,19 +16,13 @@ interface ApiKeyManagerTabProps {
 }
 
 export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps) {
-  const { keys, loading, error, createKey, linkSession, revokeKey, refreshKeys } =
+  const { keys, loading, error, createKey, revokeKey, refreshKeys } =
     useApiKeys(userId);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [newKeyName, setNewKeyName] = useState<string>('Production Dispatcher');
-  const [newKeySession, setNewKeySession] = useState<string>('default');
   const [creating, setCreating] = useState<boolean>(false);
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
-
-  // For linking session modal
-  const [linkModalKey, setLinkModalKey] = useState<ApiKey | null>(null);
-  const [linkSessionInput, setLinkSessionInput] = useState<string>('default');
-  const [linking, setLinking] = useState<boolean>(false);
 
   // For revoke confirm modal
   const [revokeModalKey, setRevokeModalKey] = useState<ApiKey | null>(null);
@@ -39,7 +33,7 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
     if (!newKeyName.trim()) return;
     setCreating(true);
     try {
-      await createKey(newKeyName.trim(), newKeySession.trim() || undefined);
+      await createKey(newKeyName.trim());
       setIsCreateModalOpen(false);
       setNewKeyName('Production Dispatcher');
     } catch (err) {
@@ -55,20 +49,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
       setCopiedKeyId(key.id);
       setTimeout(() => setCopiedKeyId(null), 2000);
       if (onKeySelect) onKeySelect(key.key);
-    }
-  };
-
-  const handleLinkSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!linkModalKey || !linkSessionInput.trim()) return;
-    setLinking(true);
-    try {
-      await linkSession(linkModalKey.id, linkSessionInput.trim());
-      setLinkModalKey(null);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLinking(false);
     }
   };
 
@@ -103,7 +83,7 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
         }
       >
         <p className="font-serif text-sm text-[#524d43] leading-relaxed">
-          API Keys authenticate all HTTP REST calls to the WhatsApp gateway. Every key is prefixed with <span className="font-mono font-bold text-[#1a1a1a]">_ars_2k03_</span> and can be linked to a specific WhatsApp phone session or operate on the default session.
+          API Keys authenticate all HTTP REST calls to the WhatsApp gateway. Every key is prefixed with <span className="font-mono font-bold text-[#1a1a1a]">_ars_2k03_</span> and automatically routes messages through your single connected WhatsApp device.
         </p>
 
         {error && (
@@ -148,7 +128,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
                 <tr className="border-b-2 border-[#1a1a1a] bg-[#f4efe2] text-xs font-mono uppercase text-[#1a1a1a]">
                   <th className="p-3 border-r border-[#1a1a1a]">NAME / LABEL</th>
                   <th className="p-3 border-r border-[#1a1a1a]">CRYPTOGRAPHIC KEY</th>
-                  <th className="p-3 border-r border-[#1a1a1a]">LINKED SESSION</th>
                   <th className="p-3 border-r border-[#1a1a1a]">LAST USED</th>
                   <th className="p-3 border-r border-[#1a1a1a]">STATUS</th>
                   <th className="p-3 text-right">ACTIONS</th>
@@ -184,12 +163,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
                       </div>
                     </td>
 
-                    <td className="p-3 border-r border-[#1a1a1a]">
-                      <Badge variant={k.sessionId ? 'emerald' : 'neutral'}>
-                        {k.sessionId || 'default'}
-                      </Badge>
-                    </td>
-
                     <td className="p-3 border-r border-[#1a1a1a] text-[#524d43]">
                       {formatTimeAgo(k.lastUsedAt)}
                     </td>
@@ -202,27 +175,14 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
 
                     <td className="p-3 text-right space-x-2">
                       {k.isActive && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setLinkModalKey(k);
-                              setLinkSessionInput(k.sessionId || 'default');
-                            }}
-                            className="text-[10px] px-2 py-0.5"
-                          >
-                            LINK SESSION
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setRevokeModalKey(k)}
-                            className="text-[10px] px-2 py-0.5 text-[#7a2020] border-[#7a2020] hover:bg-[#fae8e8]"
-                          >
-                            REVOKE
-                          </Button>
-                        </>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRevokeModalKey(k)}
+                          className="text-[10px] px-2 py-0.5 text-[#7a2020] border-[#7a2020] hover:bg-[#fae8e8]"
+                        >
+                          REVOKE
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -250,15 +210,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
             required
           />
 
-          <Input
-            label="TARGET WHATSAPP SESSION ID (OPTIONAL)"
-            value={newKeySession}
-            onChange={(e) => setNewKeySession(e.target.value)}
-            placeholder="default"
-            isMono
-            helperText="Leave as 'default' or enter an existing session identifier"
-          />
-
           <div className="pt-2 flex justify-end gap-3">
             <Button
               type="button"
@@ -269,38 +220,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
             </Button>
             <Button type="submit" variant="primary" isLoading={creating}>
               MINT KEY NOW
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Link Session Modal */}
-      <Modal
-        isOpen={!!linkModalKey}
-        onClose={() => setLinkModalKey(null)}
-        title="LINK WHATSAPP SESSION TO KEY"
-        subtitle={`TARGET KEY: ${linkModalKey?.name}`}
-      >
-        <form onSubmit={handleLinkSession} className="space-y-4">
-          <Input
-            label="TARGET SESSION ID"
-            value={linkSessionInput}
-            onChange={(e) => setLinkSessionInput(e.target.value)}
-            placeholder="default"
-            isMono
-            required
-          />
-
-          <div className="pt-2 flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setLinkModalKey(null)}
-            >
-              CANCEL
-            </Button>
-            <Button type="submit" variant="emerald" isLoading={linking}>
-              SAVE LINK
             </Button>
           </div>
         </form>
