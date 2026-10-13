@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   OnModuleDestroy,
@@ -6,11 +7,12 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Redis } from 'ioredis';
-import qrcode from 'qrcode-terminal';
+import QRCode from 'qrcode';
 import pino from 'pino';
 import type { WASocket } from 'baileys';
 import { ConfigService } from '@nestjs/config';
 import { useRedisAuthState } from '../auth/redis-auth-state.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 export type WhatsAppConnectionStatus =
   | 'connecting'
@@ -20,9 +22,11 @@ export type WhatsAppConnectionStatus =
 
 export interface WhatsAppSession {
   sessionId: string;
+  userId?: string;
   socket: WASocket | null;
   status: WhatsAppConnectionStatus;
   qr: string | null;
+  qrRaw: string | null;
   phoneNumber: string | null;
   reconnectTimer?: NodeJS.Timeout;
 }
@@ -30,7 +34,8 @@ export interface WhatsAppSession {
 export interface SessionInfo {
   sessionId: string;
   status: WhatsAppConnectionStatus;
-  qr: string | null;
+  qr: string | null; // Base64 data URL (e.g. data:image/png;base64,...) for direct <img> display
+  qrRaw: string | null; // Raw string for React QR components
   phoneNumber: string | null;
 }
 
@@ -44,7 +49,10 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
   private destroyed = false;
   private defaultSessionId = 'default';
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async onModuleInit() {
     this.defaultSessionId =
@@ -103,8 +111,12 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Initializes or gets a session, generating QR code for the frontend
+   */
   async initSession(
     sessionId: string = this.defaultSessionId,
+    userId?: string,
   ): Promise<SessionInfo> {
     const existing = this.sessions.get(sessionId);
     if (
@@ -120,12 +132,22 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
 
     const session: WhatsAppSession = existing ?? {
       sessionId,
+      userId,
       socket: null,
       status: 'connecting',
       qr: null,
+      qrRaw: null,
       phoneNumber: null,
     };
+    if (userId) {
+      session.userId = userId;
+    }
     this.sessions.set(sessionId, session);
+
+    // Sync initialization to PostgreSQL
+    if (session.userId) {
+      await this.syncSessionToDatabase(session);
+    }
 
     await this.connectSession(session);
     return this.toSessionInfo(session);
@@ -162,19 +184,33 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
 
     socket.ev.on('creds.update', saveCreds);
 
-    socket.ev.on('connection.update', ({ connection, qr, lastDisconnect }) => {
+    socket.ev.on('connection.update', async ({ connection, qr, lastDisconnect }) => {
       if (qr) {
-        session.qr = qr;
+        try {
+          // Generate high quality base64 image data URL for frontend <img>
+          const dataUrl = await QRCode.toDataURL(qr, {
+            margin: 2,
+            width: 320,
+            color: {
+              dark: '#000000',
+              light: '#ffffff',
+            },
+          });
+          session.qr = dataUrl;
+          session.qrRaw = qr;
+        } catch {
+          session.qr = null;
+          session.qrRaw = qr;
+        }
+
         session.status = 'qr_ready';
-        this.logger.log(
-          `[Session: ${session.sessionId}] WhatsApp QR code ready:`,
-        );
-        qrcode.generate(qr, { small: true });
+        this.logger.log(`[Session: ${session.sessionId}] WhatsApp QR code generated for frontend.`);
       }
 
       if (connection === 'open') {
         session.status = 'connected';
         session.qr = null;
+        session.qrRaw = null;
         session.phoneNumber = socket.user?.id
           ? socket.user.id.split(':')[0]
           : null;
@@ -183,6 +219,9 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(
           `[Session: ${session.sessionId}] WhatsApp connected (${session.phoneNumber ?? 'Unknown'})`,
         );
+
+        // Update connected state in PostgreSQL
+        await this.syncSessionToDatabase(session);
       }
 
       if (connection === 'close') {
@@ -209,8 +248,37 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
             void this.connectSession(session);
           }, 3000);
         }
+
+        // Update disconnected state in PostgreSQL
+        await this.syncSessionToDatabase(session);
       }
     });
+  }
+
+  /**
+   * Request pairing code for phone-number based linking (without camera scan)
+   */
+  async requestPairingCode(sessionId: string, phoneNumber: string): Promise<string> {
+    const session = this.sessions.get(sessionId);
+    if (!session || !session.socket) {
+      throw new BadRequestException(
+        `Session "${sessionId}" is not initialized. Please call /sessions/:sessionId/init first.`,
+      );
+    }
+
+    let cleanNumber = phoneNumber.replace(/\D/g, '');
+    if (cleanNumber.startsWith('0')) {
+      cleanNumber = `880${cleanNumber.slice(1)}`;
+    }
+
+    try {
+      const code = await session.socket.requestPairingCode(cleanNumber);
+      return code;
+    } catch (err: any) {
+      throw new BadRequestException(
+        `Failed to request pairing code: ${err?.message || 'Unknown error'}`,
+      );
+    }
   }
 
   getSessionStatus(sessionId: string = this.defaultSessionId): SessionInfo {
@@ -220,6 +288,7 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
         sessionId,
         status: 'disconnected',
         qr: null,
+        qrRaw: null,
         phoneNumber: null,
       };
     }
@@ -251,6 +320,15 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
       await this.redis.del(`session:${sessionId}`);
     }
 
+    // Remove from PostgreSQL
+    try {
+      await this.prisma.whatsAppSessionRecord.deleteMany({
+        where: { sessionId },
+      });
+    } catch {
+      /* ignore */
+    }
+
     this.logger.log(`Session "${sessionId}" deleted.`);
   }
 
@@ -260,11 +338,43 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
 
     if (!socket?.user || session?.status !== 'connected') {
       throw new ServiceUnavailableException(
-        `WhatsApp session "${sessionId}" is not connected. Please connect WhatsApp first.`,
+        `WhatsApp session "${sessionId}" is not connected. Please scan QR first.`,
       );
     }
 
     return socket;
+  }
+
+  private async syncSessionToDatabase(session: WhatsAppSession) {
+    if (!session.userId) return;
+
+    try {
+      // Ensure user exists
+      await this.prisma.user.upsert({
+        where: { id: session.userId },
+        update: {},
+        create: {
+          id: session.userId,
+          name: `User ${session.userId.slice(0, 8)}`,
+        },
+      });
+
+      await this.prisma.whatsAppSessionRecord.upsert({
+        where: { sessionId: session.sessionId },
+        update: {
+          status: session.status,
+          phoneNumber: session.phoneNumber,
+        },
+        create: {
+          sessionId: session.sessionId,
+          userId: session.userId,
+          status: session.status,
+          phoneNumber: session.phoneNumber,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to sync session "${session.sessionId}" to database:`, err);
+    }
   }
 
   private toSessionInfo(session: WhatsAppSession): SessionInfo {
@@ -272,6 +382,7 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
       sessionId: session.sessionId,
       status: session.status,
       qr: session.qr,
+      qrRaw: session.qrRaw,
       phoneNumber: session.phoneNumber,
     };
   }

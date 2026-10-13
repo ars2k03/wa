@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -22,8 +23,11 @@ export class WhatsappSessionController {
   }
 
   @Post(':sessionId/init')
-  async initSession(@Param('sessionId') sessionId: string) {
-    const session = await this.sessionService.initSession(sessionId);
+  async initSession(
+    @Param('sessionId') sessionId: string,
+    @Body('userId') userId?: string,
+  ) {
+    const session = await this.sessionService.initSession(sessionId, userId);
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -39,6 +43,26 @@ export class WhatsappSessionController {
       statusCode: HttpStatus.OK,
       success: true,
       data: status,
+    };
+  }
+
+  @Post(':sessionId/pairing-code')
+  async requestPairingCode(
+    @Param('sessionId') sessionId: string,
+    @Body('phoneNumber') phoneNumber: string,
+  ) {
+    const code = await this.sessionService.requestPairingCode(
+      sessionId,
+      phoneNumber,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Pairing code generated',
+      data: {
+        sessionId,
+        pairingCode: code,
+      },
     };
   }
 

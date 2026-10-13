@@ -33,6 +33,14 @@ console.warn = (...args: any[]) => {
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  });
+
   const port = process.env.PORT ?? 3002;
   await app.listen(port);
   logger.log(`WhatsApp OTP Gateway is running on port: ${port}`);
