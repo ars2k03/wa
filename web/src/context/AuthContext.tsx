@@ -90,8 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (err) {
+      console.warn('Error clearing storage on logout:', err);
+    }
   }, []);
 
   return (

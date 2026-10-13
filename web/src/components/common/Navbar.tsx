@@ -2,15 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import { Button } from '../ui/Button';
+import { Modal } from '../ui/Modal';
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
   const [gatewayOnline, setGatewayOnline] = useState<boolean | null>(null);
+  const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
 
   useEffect(() => {
     // Check backend health
@@ -48,6 +51,12 @@ export function Navbar() {
         window.history.pushState(null, '', `#${targetId}`);
       }
     }
+  };
+
+  const handleConfirmSignout = () => {
+    logout();
+    setIsSignoutModalOpen(false);
+    router.push('/login');
   };
 
   return (
@@ -123,8 +132,8 @@ export function Navbar() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={logout}
-                className="text-xs py-1.5 px-3"
+                onClick={() => setIsSignoutModalOpen(true)}
+                className="text-xs py-1.5 px-3 hover:bg-[#fae8e8] hover:text-[#7a2020] transition-colors"
               >
                 Sign Out
               </Button>
@@ -145,6 +154,65 @@ export function Navbar() {
           )}
         </div>
       </div>
+
+      {/* Sign Out Confirmation Alert Dialog Modal */}
+      <Modal
+        isOpen={isSignoutModalOpen}
+        onClose={() => setIsSignoutModalOpen(false)}
+        title="CONFIRM SIGN OUT"
+        subtitle="SESSION TERMINATION & STORAGE PURGE"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSignoutModalOpen(false)}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleConfirmSignout}
+              className="text-xs bg-[#7a2020] text-[#fbf8f1]"
+            >
+              Sign Out & Clear All
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 font-serif">
+          <div className="flex items-start gap-3 p-3.5 bg-[#ede5d3] border-2 border-[#1a1a1a]">
+            <span className="text-xl">⚠️</span>
+            <div className="text-xs space-y-1">
+              <p className="font-bold text-[#1a1a1a] uppercase font-mono tracking-wider">
+                Caution: Terminate Active Operator Session
+              </p>
+              <p className="text-[#524d43]">
+                Are you sure you want to sign out? Your credentials, authentication tokens, and cached operator keys will be fully cleared on this device.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-[#f4efe2] border border-[#1a1a1a] p-3 text-xs font-mono space-y-1">
+            <div className="flex justify-between">
+              <span className="text-[#524d43]">CURRENT OPERATOR:</span>
+              <span className="font-bold text-[#1a1a1a]">{user?.name || user?.email || 'Authenticated User'}</span>
+            </div>
+            {user?.email && (
+              <div className="flex justify-between">
+                <span className="text-[#524d43]">EMAIL:</span>
+                <span className="font-bold text-[#1a1a1a]">{user.email}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-t border-[#1a1a1a]/20 pt-1 mt-1">
+              <span className="text-[#524d43]">ACTION:</span>
+              <span className="text-[#7a2020] font-black uppercase">FULL STORAGE PURGE (ALL CLEAR)</span>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </header>
   );
 }
