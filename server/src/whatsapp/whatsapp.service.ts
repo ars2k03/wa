@@ -16,11 +16,10 @@ export class WhatsappService {
    */
   async sendOtpCode(
     body: SendOtpDto,
-    overrideSessionId?: string,
-    userId?: string,
-  ): Promise<{ messageId: string; recipientJid: string; senderSession: string }> {
-    const { phoneNumber, otp, sessionId: dtoSessionId } = body;
-    const sessionId = overrideSessionId || dtoSessionId || 'default';
+    sessionId: string,
+    userId: string,
+  ): Promise<{ messageId: string; recipientJid: string }> {
+    const { phoneNumber, otp } = body;
 
     const { socket, jid, userId: senderJid } = await this.getRecipient(sessionId, phoneNumber, userId);
     const content = createOtpCopyMessage(otp);
@@ -41,11 +40,10 @@ export class WhatsappService {
     return {
       messageId: message.key.id!,
       recipientJid: jid,
-      senderSession: sessionId,
     };
   }
 
-  private async getRecipient(sessionId: string, phoneNumber: string, userId?: string) {
+  private async getRecipient(sessionId: string, phoneNumber: string, userId: string) {
     const socket = this.sessionService.getConnectedSocket(sessionId, userId);
 
     let number = phoneNumber.replace(/\D/g, '');

@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class SendOtpDto {
   @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
@@ -11,9 +11,4 @@ export class SendOtpDto {
   @IsNotEmpty({ message: 'OTP code is required' })
   @IsString({ message: 'OTP code must be a string' })
   otp!: string;
-
-  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
-  @IsOptional()
-  @IsString({ message: 'Session ID must be a string' })
-  sessionId?: string;
 }

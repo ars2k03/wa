@@ -285,18 +285,16 @@ Validates the 6-digit OTP code received by email. Once verified, marks the user 
 ### 4. API Key Management
 
 #### `POST /api-keys`
-Generates a new secure API Key with prefix `_ars_2k03_`. The key can optionally be linked to a specific WhatsApp session.
+Generates a new secure API Key with prefix `_ars_2k03_`. Messages sent with the key go through the owner's connected WhatsApp device (one account = one WhatsApp).
 
 * **Auth:** `Bearer <token>`
 * **Request Body:**
   ```json
   {
-    "name": "E-Commerce Production Key",
-    "sessionId": "session_user_01"
+    "name": "E-Commerce Production Key"
   }
   ```
   * `name` (string, optional): Key identifier/label.
-  * `sessionId` (string, optional): Specific WhatsApp session ID to route messages through.
 
 **Example Response (201 Created):**
 ```json
@@ -309,7 +307,6 @@ Generates a new secure API Key with prefix `_ars_2k03_`. The key can optionally 
     "key": "_ars_2k03_a9f1b8c2d3e4f5061728394a5b6c7d8e9f0123456789abcd",
     "name": "E-Commerce Production Key",
     "userId": "cm2xxxxxxxxx",
-    "sessionId": "session_user_01",
     "isActive": true,
     "createdAt": "2026-10-14T05:30:00.000Z",
     "lastUsedAt": null
@@ -337,7 +334,6 @@ Lists all API keys created by the user.
       "key": "_ars_2k03_a9f1b8c2d3e4f5061728394a5b6c7d8e9f0123456789abcd",
       "name": "E-Commerce Production Key",
       "userId": "cm2xxxxxxxxx",
-      "sessionId": "session_user_01",
       "isActive": true,
       "createdAt": "2026-10-14T05:30:00.000Z",
       "lastUsedAt": "2026-10-14T06:12:45.000Z"
@@ -472,13 +468,13 @@ Dispatches an interactive OTP verification message containing a one-tap copy but
   ```json
   {
     "phoneNumber": "01712345678",
-    "otp": "592104",
-    "sessionId": "session_01"
+    "otp": "592104"
   }
   ```
   * `phoneNumber` (string, required): Recipient WhatsApp number (supports local format `01XXXXXXXXX` or international format `8801XXXXXXXXX`).
   * `otp` (string, required): The OTP code to display and embed in the copy button.
-  * `sessionId` (string, optional): Specific session to send through (optional if key is tied to a session or only one connected session exists).
+
+  The message is always sent from the API key owner's connected WhatsApp device. If no device is connected, the API returns `503 Service Unavailable`.
 
 **Example Response (200 OK):**
 ```json
@@ -488,8 +484,7 @@ Dispatches an interactive OTP verification message containing a one-tap copy but
   "message": "OTP sent successfully",
   "data": {
     "messageId": "3EB0XXXXXXXXXXXX",
-    "recipientJid": "8801712345678@s.whatsapp.net",
-    "senderSession": "session_01"
+    "recipientJid": "8801712345678@s.whatsapp.net"
   }
 }
 ```
@@ -584,8 +579,7 @@ curl -X POST http://localhost:3002/api-keys \
   -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "App Backend Key",
-    "sessionId": "my_session"
+    "name": "App Backend Key"
   }'
 ```
 *Save the generated `key` (`_ars_2k03_...`).*

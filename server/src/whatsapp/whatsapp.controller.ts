@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Req, ServiceUnavailableException, UseGuards } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
 import { ApiKeyGuard, type AuthenticatedRequest as AuthenticatedApiKeyRequest } from '../api_key/guards/api-key.guard.js';
@@ -18,35 +18,21 @@ export class WhatsappController {
     @Body() body: SendOtpDto,
     @Req() req: AuthenticatedApiKeyRequest,
   ) {
-    const apiKeyUserId = req.apiKeyRecord?.userId;
-    let targetSessionId = req.sessionId;
+    // One account = one WhatsApp device: always send through the API key owner's own session.
+    const userId = req.apiKeyRecord!.userId;
+    const userSession = await this.prisma.whatsAppSessionRecord.findFirst({
+      where: { userId, status: 'connected' },
+      orderBy: { updatedAt: 'desc' },
+    });
 
-    if (!targetSessionId) {
-      if (body.sessionId) {
-        if (apiKeyUserId) {
-          const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
-            where: { sessionId: body.sessionId },
-          });
-          if (sessionRecord && sessionRecord.userId !== apiKeyUserId) {
-            throw new ForbiddenException(
-              `You do not have permission to dispatch messages via session "${body.sessionId}"`,
-            );
-          }
-        }
-        targetSessionId = body.sessionId;
-      } else if (apiKeyUserId) {
-        // Automatically find user's connected single device session
-        const userSession = await this.prisma.whatsAppSessionRecord.findFirst({
-          where: { userId: apiKeyUserId, status: 'connected' },
-          orderBy: { updatedAt: 'desc' },
-        });
-        targetSessionId = userSession?.sessionId || `user_${apiKeyUserId}`;
-      } else {
-        targetSessionId = 'default';
-      }
+    if (!userSession) {
+      throw new ServiceUnavailableException(
+        'WhatsApp device is not connected. Please connect your device in the WhatsApp Device tab first.',
+      );
     }
 
-    const result = await this.whatsappService.sendOtpCode(body, targetSessionId, apiKeyUserId);
+    const targetSessionId = userSession.sessionId;
+    const result = await this.whatsappService.sendOtpCode(body, targetSessionId, userId);
 
     // Audit log in database
     void this.prisma.messageLog

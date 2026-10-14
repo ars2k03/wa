@@ -11,9 +11,4 @@ export class CreateApiKeyDto {
   @IsOptional()
   @IsString({ message: 'Name must be a string' })
   name?: string;
-
-  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
-  @IsOptional()
-  @IsString({ message: 'Session ID must be a string' })
-  sessionId?: string;
 }

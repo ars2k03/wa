@@ -7,7 +7,6 @@ export interface CachedApiKey {
   id: string;
   key: string;
   userId: string;
-  sessionId: string | null;
   isActive: boolean;
   cachedAt: number;
 }
@@ -24,22 +23,10 @@ export class ApiKeyService {
    * Generates a new cryptographically secure API Key
    */
   async createApiKey(body: CreateApiKeyDto) {
-    const { userId, name = 'Default Key', sessionId } = body;
+    const { userId, name = 'Default Key' } = body;
 
     if (!userId) {
       throw new BadRequestException('User ID is required to generate an API key');
-    }
-
-    // Ensure linked session belongs to this user if specified
-    if (sessionId && userId) {
-      const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
-        where: { sessionId },
-      });
-      if (sessionRecord && sessionRecord.userId !== userId) {
-        throw new ForbiddenException(
-          `You cannot link session "${sessionId}" because it belongs to another user`,
-        );
-      }
     }
 
     // Ensure the user exists in database, or create a default user record
@@ -61,7 +48,6 @@ export class ApiKeyService {
         key,
         name,
         userId,
-        sessionId: sessionId || null,
         isActive: true,
       },
     });
@@ -71,7 +57,7 @@ export class ApiKeyService {
   }
 
   /**
-   * Validates an API Key, returning its associated record and session ID
+   * Validates an API Key, returning its associated record
    */
   async validateApiKey(key: string) {
     if (!key || typeof key !== 'string') {
@@ -105,7 +91,6 @@ export class ApiKeyService {
       id: apiKey.id,
       key: apiKey.key,
       userId: apiKey.userId,
-      sessionId: apiKey.sessionId,
       isActive: apiKey.isActive,
       cachedAt: now,
     };

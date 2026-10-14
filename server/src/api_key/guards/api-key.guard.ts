@@ -7,9 +7,7 @@ export interface AuthenticatedRequest extends Request {
     id: string;
     key: string;
     userId: string;
-    sessionId: string | null;
   };
-  sessionId?: string;
   userId?: string;
 }
 
@@ -35,9 +33,6 @@ export class ApiKeyGuard implements CanActivate {
     // Inject into request object for downstream controllers
     request.apiKeyRecord = keyRecord;
     request.userId = keyRecord.userId;
-    if (keyRecord.sessionId) {
-      request.sessionId = keyRecord.sessionId;
-    }
 
     return true;
   }

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { WhatsappSessionService } from '../src/whatsapp_session/whatsapp_session.service.js';
-import { ApiKeyService } from '../src/api_key/api_key.service.js';
 import { OtpService } from '../src/otp/otp.service.js';
 
 describe('Security Hardening Specs', () => {
@@ -62,42 +61,6 @@ describe('Security Hardening Specs', () => {
 
       await expect(
         sessionService.deleteSession('session_123', 'attacker_user'),
-      ).rejects.toThrow(ForbiddenException);
-    });
-  });
-
-  describe('ApiKeyService Session Hijacking Prevention', () => {
-    let apiKeyService: ApiKeyService;
-    let prismaMock: any;
-
-    beforeEach(() => {
-      prismaMock = {
-        apiKey: {
-          create: vi.fn(),
-          findUnique: vi.fn(),
-          update: vi.fn(),
-        },
-        whatsAppSessionRecord: {
-          findUnique: vi.fn(),
-        },
-        user: {
-          upsert: vi.fn(),
-        },
-      };
-      apiKeyService = new ApiKeyService(prismaMock);
-    });
-
-    it('prevents linking another user session to an API key', async () => {
-      prismaMock.whatsAppSessionRecord.findUnique.mockResolvedValue({
-        sessionId: 'victim_session',
-        userId: 'victim_user',
-      });
-
-      await expect(
-        apiKeyService.createApiKey({
-          userId: 'attacker_user',
-          sessionId: 'victim_session',
-        }),
       ).rejects.toThrow(ForbiddenException);
     });
   });
