@@ -26,14 +26,13 @@ export function useApiKeys(userId?: string | null) {
   }, [userId]);
 
   const createKey = useCallback(
-    async (name: string, sessionId?: string) => {
+    async (name: string) => {
       setLoading(true);
       setError(null);
       try {
         const res = await api.createApiKey({
           userId: userId || undefined,
           name,
-          sessionId,
         });
         if (res.success && res.data) {
           setKeys((prev) => [res.data, ...prev]);

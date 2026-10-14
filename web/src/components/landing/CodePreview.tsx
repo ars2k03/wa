@@ -13,8 +13,7 @@ function getSnippets(baseUrl: string): Record<string, { label: string; code: str
   -H "x-api-key: your_api_key_here" \\
   -d '{
     "phoneNumber": "+8801700000000",
-    "otp": "492018",
-    "sessionId": "default"
+    "otp": "492018"
   }'`,
     },
     nodejs: {
@@ -28,7 +27,6 @@ function getSnippets(baseUrl: string): Record<string, { label: string; code: str
   body: JSON.stringify({
     phoneNumber: '+8801700000000',
     otp: '492018',
-    sessionId: 'default',
   }),
 });
 
@@ -46,8 +44,7 @@ headers = {
 }
 payload = {
     "phoneNumber": "+8801700000000",
-    "otp": "492018",
-    "sessionId": "default"
+    "otp": "492018"
 }
 
 response = requests.post(url, json=payload, headers=headers)
@@ -66,8 +63,7 @@ curl_setopt_array($ch, [
     ],
     CURLOPT_POSTFIELDS => json_encode([
         'phoneNumber' => '+8801700000000',
-        'otp' => '492018',
-        'sessionId' => 'default'
+        'otp' => '492018'
     ])
 ]);
 $response = curl_exec($ch);
@@ -89,7 +85,6 @@ func main() {
 	payload, _ := json.Marshal(map[string]string{
 		"phoneNumber": "+8801700000000",
 		"otp":         "492018",
-		"sessionId":   "default",
 	})
 
 	req, _ := http.NewRequest("POST", "${baseUrl}/send-otp", bytes.NewBuffer(payload))

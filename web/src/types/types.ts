@@ -15,7 +15,6 @@ export interface ApiKey {
   key: string;
   name: string;
   userId: string;
-  sessionId: string | null;
   isActive: boolean;
   lastUsedAt: string | null;
   createdAt: string;
@@ -55,7 +54,6 @@ export interface ApiResponse<T = any> {
 export interface SendOtpPayload {
   phoneNumber: string;
   otp: string;
-  sessionId?: string;
 }
 
 export interface SendOtpResult {

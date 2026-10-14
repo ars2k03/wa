@@ -111,13 +111,14 @@ export function Navbar() {
           >
             How It Works
           </a>
-          <a
-            href="/#docs"
-            onClick={(e) => handleSectionScroll(e, 'docs')}
-            className="hover:text-[#1a1a1a] hover:underline transition-colors cursor-pointer"
+          <Link
+            href="/docs"
+            className={`hover:text-[#1a1a1a] hover:underline transition-colors cursor-pointer ${
+              pathname.startsWith('/docs') ? 'text-[#7a2020] underline font-bold' : ''
+            }`}
           >
             Docs
-          </a>
+          </Link>
         </nav>
 
         {/* Right Action Buttons */}

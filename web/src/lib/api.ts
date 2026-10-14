@@ -128,7 +128,6 @@ export const api = {
   createApiKey: async (payload: {
     userId?: string;
     name?: string;
-    sessionId?: string;
   }): Promise<ApiResponse<ApiKey>> => {
     return fetchJson<ApiResponse<ApiKey>>('/api-keys', {
       method: 'POST',
