@@ -14,8 +14,6 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [pairingCode, setPairingCode] = useState<string | null>(null);
-  const [pairingLoading, setPairingLoading] = useState<boolean>(false);
   const [hasFetchedInitialStatus, setHasFetchedInitialStatus] = useState<boolean>(false);
 
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -55,24 +53,6 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
     [sessionId],
   );
 
-  const requestPairing = useCallback(
-    async (phoneNumber: string) => {
-      setPairingLoading(true);
-      setError(null);
-      try {
-        const res = await api.requestPairingCode(sessionId, phoneNumber);
-        if (res.success && res.data?.pairingCode) {
-          setPairingCode(res.data.pairingCode);
-        }
-      } catch (err: any) {
-        setError(err?.message || 'Failed to generate pairing code');
-      } finally {
-        setPairingLoading(false);
-      }
-    },
-    [sessionId],
-  );
-
   const deleteSession = useCallback(async () => {
     setLoading(true);
     try {
@@ -91,7 +71,6 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
           }
           : null,
       );
-      setPairingCode(null);
     } catch (err: any) {
       setError(err?.message || 'Failed to disconnect session');
     } finally {
@@ -133,11 +112,8 @@ export function useWhatsAppSession(initialSessionId: string = 'default') {
     sessionError: sessionInfo?.lastError ?? null,
     loading,
     error,
-    pairingCode,
-    pairingLoading,
     hasFetchedInitialStatus,
     initSession,
-    requestPairing,
     deleteSession,
     refreshStatus: fetchStatus,
   };

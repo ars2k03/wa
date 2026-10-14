@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "WA Gateway | Modern WhatsApp API for Developers",
   description:
     "Connect in seconds, generate API keys, and automate WhatsApp OTPs & alerts via simple REST endpoints.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

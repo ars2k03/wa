@@ -1,7 +1,6 @@
 import type {
   ApiKey,
   ApiResponse,
-  BackendStats,
   MessageLog,
   SendOtpPayload,
   SendOtpResult,
@@ -47,6 +46,12 @@ async function fetchJson<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('telegraph_auth_token');
+      localStorage.removeItem('telegraph_auth_user');
+      window.dispatchEvent(new Event('telegraph_auth_expired'));
+    }
+
     const errorMessage =
       data?.message ||
       data?.error ||
@@ -64,13 +69,9 @@ async function fetchJson<T>(
 }
 
 export const api = {
-  // Backend Health & Stats
+  // Backend Health
   getStatus: async () => {
     return fetchJson<ApiResponse<any>>('/');
-  },
-
-  getStats: async (): Promise<ApiResponse<BackendStats>> => {
-    return fetchJson<ApiResponse<BackendStats>>('/stats');
   },
 
   // Authentication
@@ -139,22 +140,6 @@ export const api = {
     return fetchJson<ApiResponse<ApiKey[]>>(`/api-keys/${userId}`);
   },
 
-  linkSessionToKey: async (
-    keyId: string,
-    sessionId: string,
-  ): Promise<ApiResponse<ApiKey>> => {
-    return fetchJson<ApiResponse<ApiKey>>(`/api-keys/${keyId}/link-session`, {
-      method: 'PUT',
-      body: JSON.stringify({ sessionId }),
-    });
-  },
-
-  revokeApiKey: async (keyId: string): Promise<ApiResponse<ApiKey>> => {
-    return fetchJson<ApiResponse<ApiKey>>(`/api-keys/${keyId}/revoke`, {
-      method: 'PUT',
-    });
-  },
-
   deleteApiKey: async (keyId: string): Promise<ApiResponse<any>> => {
     return fetchJson<ApiResponse<any>>(`/api-keys/${keyId}`, {
       method: 'DELETE',
@@ -162,10 +147,6 @@ export const api = {
   },
 
   // WhatsApp Sessions
-  getAllSessions: async (): Promise<ApiResponse<SessionInfo[]>> => {
-    return fetchJson<ApiResponse<SessionInfo[]>>('/sessions');
-  },
-
   initSession: async (
     sessionId: string,
     userId?: string,
@@ -180,18 +161,6 @@ export const api = {
     sessionId: string,
   ): Promise<ApiResponse<SessionInfo>> => {
     return fetchJson<ApiResponse<SessionInfo>>(`/sessions/${sessionId}/status`);
-  },
-
-  requestPairingCode: async (
-    sessionId: string,
-    phoneNumber: string,
-  ): Promise<ApiResponse<{ sessionId: string; pairingCode: string }>> => {
-    return fetchJson<
-      ApiResponse<{ sessionId: string; pairingCode: string }>
-    >(`/sessions/${sessionId}/pairing-code`, {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber }),
-    });
   },
 
   deleteSession: async (sessionId: string): Promise<ApiResponse<void>> => {

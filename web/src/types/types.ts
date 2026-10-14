@@ -63,9 +63,3 @@ export interface SendOtpResult {
   recipient: string;
   timestamp: number;
 }
-
-export interface BackendStats {
-  activeKeys: number;
-  registeredUsers: number;
-  dispatchedMessages: number;
-}

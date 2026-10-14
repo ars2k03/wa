@@ -63,38 +63,6 @@ export function useApiKeys(userId?: string | null) {
     }
   }, []);
 
-  const linkSession = useCallback(
-    async (keyId: string, sessionId: string) => {
-      try {
-        const res = await api.linkSessionToKey(keyId, sessionId);
-        if (res.success && res.data) {
-          setKeys((prev) =>
-            prev.map((k) => (k.id === keyId ? res.data : k)),
-          );
-          return res.data;
-        }
-      } catch (err: any) {
-        setError(err?.message || 'Failed to link session');
-        throw err;
-      }
-    },
-    [],
-  );
-
-  const revokeKey = useCallback(async (keyId: string) => {
-    try {
-      const res = await api.revokeApiKey(keyId);
-      if (res.success) {
-        setKeys((prev) =>
-          prev.map((k) => (k.id === keyId ? { ...k, isActive: false } : k)),
-        );
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to revoke key');
-      throw err;
-    }
-  }, []);
-
   useEffect(() => {
     if (userId) {
       fetchKeys();
@@ -107,8 +75,6 @@ export function useApiKeys(userId?: string | null) {
     error,
     createKey,
     deleteKey,
-    linkSession,
-    revokeKey,
     refreshKeys: fetchKeys,
   };
 }

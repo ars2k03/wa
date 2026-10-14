@@ -30,31 +30,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore authentication from localStorage on boot
+  // Restore and validate authentication on boot
   useEffect(() => {
-    try {
-      const savedToken = localStorage.getItem(TOKEN_KEY);
-      const savedUserStr = localStorage.getItem(USER_KEY);
+    let isCancelled = false;
 
-      if (savedToken && savedUserStr) {
-        const parsedUser = JSON.parse(savedUserStr);
-        setToken(savedToken);
-        setUser(parsedUser);
-      } else {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+    const initAuth = async () => {
+      try {
+        const savedToken = localStorage.getItem(TOKEN_KEY);
+        const savedUserStr = localStorage.getItem(USER_KEY);
+
+        if (!savedToken) {
+          if (!isCancelled) {
+            setToken(null);
+            setUser(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // Optimistically set cached user so UI doesn't flicker while checking
+        if (savedUserStr) {
+          try {
+            const parsedUser = JSON.parse(savedUserStr);
+            if (!isCancelled) {
+              setToken(savedToken);
+              setUser(parsedUser);
+            }
+          } catch {
+            // ignore JSON parse error
+          }
+        }
+
+        // Validate token with backend /auth/me
+        const res = await api.getMe();
+        if (res.success && res.data) {
+          if (!isCancelled) {
+            setUser(res.data);
+            setToken(savedToken);
+            localStorage.setItem(USER_KEY, JSON.stringify(res.data));
+          }
+        } else {
+          throw new Error('Invalid authentication session');
+        }
+      } catch (err) {
+        console.warn('Session expired or invalid, logging out:', err);
+        if (!isCancelled) {
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
-    } catch (err) {
-      console.warn('Failed to parse cached auth state:', err);
+    };
+
+    void initAuth();
+
+    // Listen to token expired events from api.ts (401 interceptor)
+    const handleAuthExpired = () => {
       setToken(null);
       setUser(null);
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
-    } finally {
-      setIsLoading(false);
-    }
+    };
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === TOKEN_KEY || e.key === USER_KEY) {
@@ -74,8 +115,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('telegraph_auth_expired', handleAuthExpired);
+
+    return () => {
+      isCancelled = true;
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('telegraph_auth_expired', handleAuthExpired);
+    };
   }, []);
 
   const login = useCallback(
