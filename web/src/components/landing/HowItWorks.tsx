@@ -81,14 +81,6 @@ export function HowItWorks() {
             </div>
           ))}
         </div>
-
-        <div className="text-center pt-2">
-          <Link href="/register">
-            <Button variant="primary" size="lg" className="shadow-[4px_4px_0px_#1a1a1a]">
-              Start Sending Messages Now →
-            </Button>
-          </Link>
-        </div>
       </div>
     </section>
   );

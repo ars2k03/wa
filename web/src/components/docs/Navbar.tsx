@@ -11,7 +11,7 @@ export function DocsNavbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#fbf8f1] border-b-2 border-[#1a1a1a]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 relative">
+      <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Brand & Docs Badge */}
         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
           <Link href="/" className="flex items-center gap-2.5 group cursor-pointer">
@@ -27,7 +27,7 @@ export function DocsNavbar() {
 
         {/* Right CTA Links */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Link href="/">
+          <Link href="/" className="hidden sm:block">
             <Button variant="outline" size="sm" className="text-xs py-1.5 px-3">
               ← Website
             </Button>

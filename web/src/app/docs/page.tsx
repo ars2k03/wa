@@ -1,618 +1,435 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { copyToClipboard } from '@/utils/utils';
+import {
+  Callout,
+  CodePanel,
+  DocsSection,
+  DocsTable,
+  Eyebrow,
+  InlineCode,
+  ParamList,
+  Prose,
+  Split,
+  SubHeading,
+} from '@/components/docs/DocsUI';
 
-export default function DocsPage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-  const [activeTab, setActiveTab] = useState<'curl' | 'nodejs' | 'python' | 'php'>('curl');
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+const EXAMPLE_PHONE = '+8801712345678';
+const EXAMPLE_OTP = '482910';
+const EXAMPLE_KEY_SHORT = '_ars_2k03_a9f1b8c2d3e4f506...';
 
-  // Live Terminal Simulator State
-  const [simPhone, setSimPhone] = useState('+8801712345678');
-  const [simOtp, setSimOtp] = useState('482910');
-  const [simApiKey, setSimApiKey] = useState('_ars_2k03_a9f1b8c2d3e4f5061728394a5b6c7d8e9f0123456789abcd');
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [hasExecuted, setHasExecuted] = useState(true);
-  const [simLatency, setSimLatency] = useState(132);
-  const [simDate, setSimDate] = useState('Wed, 14 Oct 2026 10:18:22 GMT');
-  const [simMsgId, setSimMsgId] = useState('3EB0A1F4C29D7E83B6105F');
-
-  const handleCopy = (text: string, id: string) => {
-    copyToClipboard(text);
-    setCopiedKey(id);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
-
-  const handleRunSimulation = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSimulating(true);
-    setHasExecuted(false);
-
-    // Simulate realistic 300ms network & WhatsApp dispatch latency
-    setTimeout(() => {
-      setSimLatency(Math.floor(Math.random() * 45) + 115);
-      setSimDate(new Date().toUTCString());
-      // Baileys message IDs: "3EB0" + 18 uppercase hex chars.
-      const hex = Array.from({ length: 18 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-      setSimMsgId(`3EB0${hex.toUpperCase()}`);
-      setIsSimulating(false);
-      setHasExecuted(true);
-    }, 400);
-  };
-
-  const snippets = {
-    curl: `curl -X POST "${apiUrl}/send-otp" \\
+function requestSnippets(apiUrl: string) {
+  const url = `${apiUrl}/send-otp`;
+  return [
+    {
+      id: 'curl',
+      label: 'cURL',
+      code: `curl -X POST "${url}" \\
+  -H "x-api-key: YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: ${simApiKey || 'your_api_key_here'}" \\
-  -d '{
-    "phoneNumber": "${simPhone}",
-    "otp": "${simOtp}"
-  }'`,
-    nodejs: `// Node.js (Fetch / Axios)
-const response = await fetch('${apiUrl}/send-otp', {
-  method: 'POST',
+  -d '{"phoneNumber": "${EXAMPLE_PHONE}", "otp": "${EXAMPLE_OTP}"}'`,
+    },
+    {
+      id: 'node',
+      label: 'Node.js',
+      code: `const res = await fetch("${url}", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'x-api-key': '${simApiKey || 'your_api_key_here'}',
+    "x-api-key": process.env.WA_GATEWAY_KEY,
+    "Content-Type": "application/json",
   },
-  body: JSON.stringify({
-    phoneNumber: '${simPhone}',
-    otp: '${simOtp}',
-  }),
+  body: JSON.stringify({ phoneNumber: "${EXAMPLE_PHONE}", otp: "${EXAMPLE_OTP}" }),
 });
 
-const result = await response.json();
-console.log('Dispatch Status:', result);`,
-    python: `# Python (Requests)
-import requests
+const result = await res.json();
+if (!res.ok) throw new Error(result.message);
+console.log(result.data.messageId);`,
+    },
+    {
+      id: 'python',
+      label: 'Python',
+      code: `import os, requests
 
-url = "${apiUrl}/send-otp"
-headers = {
-    "Content-Type": "application/json",
-    "x-api-key": "${simApiKey || 'your_api_key_here'}"
-}
-payload = {
-    "phoneNumber": "${simPhone}",
-    "otp": "${simOtp}"
-}
+res = requests.post(
+    "${url}",
+    headers={"x-api-key": os.environ["WA_GATEWAY_KEY"]},
+    json={"phoneNumber": "${EXAMPLE_PHONE}", "otp": "${EXAMPLE_OTP}"},
+)
 
-response = requests.post(url, json=payload, headers=headers)
-print(response.status_code, response.json())`,
-    php: `<?php
-// PHP cURL
-$ch = curl_init('${apiUrl}/send-otp');
+res.raise_for_status()
+print(res.json()["data"]["messageId"])`,
+    },
+    {
+      id: 'php',
+      label: 'PHP',
+      code: `<?php
+$ch = curl_init("${url}");
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
     CURLOPT_HTTPHEADER => [
-        'Content-Type: application/json',
-        'x-api-key: ${simApiKey || 'your_api_key_here'}'
+        "x-api-key: " . getenv("WA_GATEWAY_KEY"),
+        "Content-Type: application/json",
     ],
     CURLOPT_POSTFIELDS => json_encode([
-        'phoneNumber' => '${simPhone}',
-        'otp' => '${simOtp}'
-    ])
+        "phoneNumber" => "${EXAMPLE_PHONE}",
+        "otp" => "${EXAMPLE_OTP}",
+    ]),
 ]);
+$result = json_decode(curl_exec($ch), true);
+echo $result["data"]["messageId"];`,
+    },
+  ];
+}
 
-$response = curl_exec($ch);
-curl_close($ch);
-echo $response;`,
-  };
+const json = (value: unknown) => JSON.stringify(value, null, 2);
+
+// These mirror the backend's real responses (backend/src/whatsapp/whatsapp.controller.ts).
+const SUCCESS_RESPONSE = json({
+  statusCode: 200,
+  success: true,
+  message: 'OTP sent successfully',
+  data: {
+    messageId: '3EB0A1F4C29D7E83B6105F',
+    recipientJid: '8801712345678@s.whatsapp.net',
+  },
+});
+
+const NOT_ON_WHATSAPP_RESPONSE = json({
+  statusCode: 400,
+  message: 'Number 8801712345678 is not registered on WhatsApp.',
+  error: 'Bad Request',
+});
+
+const NOT_CONNECTED_RESPONSE = json({
+  statusCode: 503,
+  message: 'WhatsApp device is not connected. Please connect your device in the WhatsApp Device tab first.',
+  error: 'Service Unavailable',
+});
+
+const QUICKSTART_STEPS = [
+  { title: 'Create an account', body: <>Sign up and verify your email.</> },
+  {
+    title: 'Link WhatsApp',
+    body: (
+      <>
+        Dashboard → <strong>WhatsApp Device</strong>. Scan the QR code from WhatsApp → Linked Devices.
+      </>
+    ),
+  },
+  {
+    title: 'Create an API key',
+    body: (
+      <>
+        Dashboard → <strong>API Keys</strong> → Generate. Copy it somewhere safe.
+      </>
+    ),
+  },
+  {
+    title: 'Send an OTP',
+    body: (
+      <>
+        Call <InlineCode>POST /send-otp</InlineCode> with the number and code.
+      </>
+    ),
+  },
+];
+
+export default function DocsPage() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
   return (
-    <div className="bg-[#fbf8f1] text-[#1a1a1a] pb-24">
-      {/* Editorial Header */}
-      <section className="border-b-2 border-[#1a1a1a] bg-[#f4efe2] px-4 py-12 md:py-16 text-center">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2">
-            <Badge variant="burgundy">DOCUMENTATION</Badge>
-            <span className="font-mono text-xs text-[#524d43] font-bold">DEVELOPER GUIDE</span>
-          </div>
-          <h1 className="font-serif text-3xl sm:text-5xl font-black text-[#1a1a1a] tracking-tight">
-            Step-by-Step Integration Guide
+    <main className="min-w-0 px-4 sm:px-8 lg:px-12 pt-10 pb-24">
+        {/* Introduction */}
+        <section id="introduction" className="scroll-mt-24 pb-12 mb-12 border-b-2 border-dashed border-[#d6cdb8]">
+          <Eyebrow>Documentation</Eyebrow>
+          <h1 className="font-serif text-4xl sm:text-5xl font-black text-[#1a1a1a] leading-[1.1] tracking-tight mt-2 mb-3">
+            Send WhatsApp OTPs with one API call
           </h1>
-          <p className="font-serif text-base sm:text-lg text-[#524d43] max-w-xl mx-auto">
-            Everything you need to automate WhatsApp OTP verification and transactional notifications in minutes.
-          </p>
-        </div>
-      </section>
+          <Prose className="text-lg">
+            WA Gateway sends verification codes from <strong>your own WhatsApp number</strong> to your users. Link
+            your phone once, create an API key, and send codes with a single HTTP request.
+          </Prose>
 
-      {/* Main Container */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 space-y-16">
-        {/* =========================================================
-            STEP 1: CREATE ACCOUNT & GENERATE API KEY
-           ========================================================= */}
-        <section id="step-1" className="space-y-4 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            <span className="w-10 h-10 flex items-center justify-center font-mono font-black text-sm bg-[#1a1a1a] text-[#fbf8f1] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#7a2020]">
-              01
-            </span>
-            <div>
-              <span className="text-[11px] font-mono font-bold uppercase text-[#7a2020] tracking-wider block">
-                STEP 1 • ACCOUNT &amp; AUTHENTICATION
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#1a1a1a]">
-                Create Account &amp; Get API Key
-              </h2>
-            </div>
+          <div className="mt-5 border-2 border-[#1a1a1a] bg-[#ede5d3] shadow-[4px_4px_0px_#1a1a1a] px-3.5 py-3 flex flex-wrap items-center gap-2.5 font-mono">
+            <span className="text-[10px] font-bold tracking-[0.1em] text-[#524d43]">BASE URL</span>
+            <code className="text-[13px] font-bold break-all">{apiUrl}</code>
           </div>
 
-          <div className="border-2 border-[#1a1a1a] bg-[#fbf8f1] p-6 shadow-[5px_5px_0px_#1a1a1a] space-y-5">
-            <p className="font-serif text-sm sm:text-base text-[#524d43] leading-relaxed">
-              Sign up for a developer account and open your dashboard. With a single click, generate your cryptographically secure API key. Every outbound dispatch request uses this key for authorization.
-            </p>
+          <Callout tone="tip" title="ONE ACCOUNT = ONE WHATSAPP">
+            Every account links exactly one WhatsApp number. All messages sent with your API keys come from that
+            number.
+          </Callout>
+        </section>
 
-            {/* Visual Token Representation Card */}
-            <div className="border-2 border-[#1a1a1a] bg-[#f4efe2] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[2px_2px_0px_#1a1a1a]">
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-[#7a2020] uppercase tracking-wider block">
-                  AUTHENTICATION HEADER FORMAT
+        {/* Quickstart */}
+        <DocsSection id="quickstart" eyebrow="Getting started" title="Quickstart">
+          <Prose>Go from zero to your first OTP in about two minutes.</Prose>
+          <ol className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 mt-5">
+            {QUICKSTART_STEPS.map((step, i) => (
+              <li key={step.title} className="border-2 border-[#1a1a1a] bg-[#fbf8f1] shadow-[4px_4px_0px_#1a1a1a] p-4">
+                <span className="inline-flex w-7 h-7 items-center justify-center bg-[#1a1a1a] text-[#fbf8f1] font-mono text-xs font-extrabold mb-2.5">
+                  {i + 1}
                 </span>
-                <code className="font-mono text-xs sm:text-sm font-bold text-[#1a1a1a] bg-[#fbf8f1] px-2 py-1 border border-[#1a1a1a] inline-block">
-                  x-api-key: _ars_2k03_a9f1b8c2d3e4f506...
-                </code>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Link href="/register">
-                  <Button variant="primary" size="sm" className="text-xs py-1.5 px-3">
-                    Sign Up Free →
-                  </Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button variant="outline" size="sm" className="text-xs py-1.5 px-3">
-                    Dashboard
-                  </Button>
-                </Link>
-              </div>
+                <div className="font-mono text-[13px] font-extrabold mb-1">{step.title}</div>
+                <p className="font-serif text-sm text-[#524d43] leading-relaxed">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+          <Callout title="TEST WITHOUT CODE">
+            Dashboard → <strong>Message Tester</strong> sends a real OTP to any number, so you can see the full flow
+            before integrating.
+          </Callout>
+        </DocsSection>
+
+        {/* Authentication */}
+        <DocsSection id="authentication" eyebrow="Basics" title="Authentication">
+          <Split
+            aside={
+              <CodePanel
+                label="HEADERS"
+                tabs={[
+                  {
+                    id: 'headers',
+                    label: 'Headers',
+                    code: `x-api-key: ${EXAMPLE_KEY_SHORT}\n\n# or\nAuthorization: Bearer ${EXAMPLE_KEY_SHORT}`,
+                  },
+                ]}
+              />
+            }
+          >
+            <Prose>
+              Every request needs your API key. Send it in the <InlineCode>x-api-key</InlineCode> header. The{' '}
+              <InlineCode>Authorization: Bearer</InlineCode> header also works.
+            </Prose>
+            <Prose>
+              Keys look like <InlineCode>_ars_2k03_</InlineCode> followed by 48 characters.
+            </Prose>
+            <Callout tone="warn" title="KEEP KEYS SECRET">
+              Call the API from your server only. Never put your key in browser or mobile app code. If a key leaks,
+              delete it in the dashboard and create a new one.
+            </Callout>
+          </Split>
+        </DocsSection>
+
+        {/* Phone number format */}
+        <DocsSection id="phone-format" eyebrow="Basics" title="Phone number format">
+          <Prose>
+            Send the number with its country code. Spaces, dashes and <InlineCode>+</InlineCode> are removed for you.
+            Bangladeshi local numbers starting with <InlineCode>0</InlineCode> are converted automatically.
+          </Prose>
+          <DocsTable
+            head={['YOU SEND', 'WE SEND TO', 'RESULT']}
+            rows={[
+              ['+8801712345678', <InlineCode key="a">8801712345678</InlineCode>, '✓ Works'],
+              ['01712345678', <InlineCode key="b">8801712345678</InlineCode>, '✓ Works (local BD format)'],
+              ['+880 1712-345678', <InlineCode key="c">8801712345678</InlineCode>, '✓ Works'],
+              ['12345', '—', '✗ 400: too short (needs 10–15 digits)'],
+            ]}
+          />
+        </DocsSection>
+
+        {/* Send OTP */}
+        <DocsSection id="send-otp" eyebrow="API reference" title="Send an OTP">
+          <Split
+            aside={
+              <>
+                <CodePanel tabs={requestSnippets(apiUrl)} />
+                <CodePanel
+                  label="RESPONSE"
+                  status={{ text: '200 OK', ok: true }}
+                  json
+                  tabs={[{ id: 'res', label: 'Response', code: SUCCESS_RESPONSE }]}
+                />
+              </>
+            }
+          >
+            <div className="inline-flex items-center gap-2 font-mono text-sm font-extrabold border-2 border-[#1a1a1a] bg-[#ede5d3] shadow-[3px_3px_0px_#1a1a1a] px-2.5 py-1.5 mb-4">
+              <span className="text-[11px] bg-[#2e6930] text-[#fbf8f1] px-1.5 py-0.5">POST</span>
+              /send-otp
             </div>
-          </div>
-        </section>
+            <Prose>
+              Sends a verification code to a WhatsApp number. The user gets a message with the code and a one-tap{' '}
+              <strong>Copy Code</strong> button.
+            </Prose>
 
-        {/* =========================================================
-            STEP 2: SCAN QR CODE (WITH DEMO QR VISUAL)
-           ========================================================= */}
-        <section id="step-2" className="space-y-4 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            <span className="w-10 h-10 flex items-center justify-center font-mono font-black text-sm bg-[#1a1a1a] text-[#fbf8f1] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#2e6930]">
-              02
-            </span>
-            <div>
-              <span className="text-[11px] font-mono font-bold uppercase text-[#2e6930] tracking-wider block">
-                STEP 2 • DEVICE PAIRING
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#1a1a1a]">
-                Scan QR Code to Link WhatsApp
-              </h2>
-            </div>
-          </div>
+            <SubHeading>Body parameters</SubHeading>
+            <ParamList
+              params={[
+                {
+                  name: 'phoneNumber',
+                  type: 'string',
+                  required: true,
+                  children: (
+                    <>
+                      The recipient&apos;s WhatsApp number. See{' '}
+                      <a href="#phone-format" className="underline">
+                        phone number format
+                      </a>
+                      .
+                    </>
+                  ),
+                },
+                {
+                  name: 'otp',
+                  type: 'string',
+                  required: true,
+                  children: (
+                    <>The code to send. You generate it and check it in your own app; WA Gateway only delivers it.</>
+                  ),
+                },
+              ]}
+            />
 
-          <div className="border-2 border-[#1a1a1a] bg-[#fbf8f1] p-6 shadow-[5px_5px_0px_#1a1a1a] space-y-6">
-            <p className="font-serif text-sm sm:text-base text-[#524d43] leading-relaxed">
-              In your Dashboard under <strong>WhatsApp Device</strong>, a real-time QR code will be generated. Simply scan it with your phone using WhatsApp&apos;s Linked Devices feature.
-            </p>
+            <SubHeading>Response fields</SubHeading>
+            <ParamList
+              params={[
+                {
+                  name: 'success',
+                  type: 'boolean',
+                  children: (
+                    <>
+                      <InlineCode>true</InlineCode> when WhatsApp accepted the message.
+                    </>
+                  ),
+                },
+                {
+                  name: 'message',
+                  type: 'string',
+                  children: (
+                    <>
+                      Always <InlineCode>&quot;OTP sent successfully&quot;</InlineCode> on success.
+                    </>
+                  ),
+                },
+                {
+                  name: 'data.messageId',
+                  type: 'string',
+                  children: (
+                    <>
+                      WhatsApp&apos;s ID for this message. It also appears in your dashboard&apos;s{' '}
+                      <strong>Message Logs</strong>, so you can match it later.
+                    </>
+                  ),
+                },
+                {
+                  name: 'data.recipientJid',
+                  type: 'string',
+                  children: (
+                    <>
+                      The WhatsApp address the code went to, e.g. <InlineCode>8801712345678@s.whatsapp.net</InlineCode>.
+                      Use it to confirm which number was used after formatting.
+                    </>
+                  ),
+                },
+              ]}
+            />
+          </Split>
+        </DocsSection>
 
-            {/* Split Visual: Left Demo QR Code, Right Scanning Steps */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-2 border-[#1a1a1a] bg-[#ede5d3] p-5 shadow-[3px_3px_0px_#1a1a1a]">
-              {/* Left Column: Realistic Demo QR Graphic */}
-              <div className="md:col-span-5 flex flex-col items-center justify-center space-y-3">
-                <div className="border-2 border-[#1a1a1a] bg-[#ffffff] p-3 shadow-[4px_4px_0px_#1a1a1a] flex flex-col items-center">
-                  {/* Clean SVG Demo QR Code */}
-                  <svg
-                    width="150"
-                    height="150"
-                    viewBox="0 0 150 150"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="select-none"
-                  >
-                    {/* Background */}
-                    <rect width="150" height="150" fill="white" />
-                    {/* Top Left Marker */}
-                    <rect x="10" y="10" width="40" height="40" stroke="#1a1a1a" strokeWidth="6" fill="white" />
-                    <rect x="22" y="22" width="16" height="16" fill="#1a1a1a" />
-                    {/* Top Right Marker */}
-                    <rect x="100" y="10" width="40" height="40" stroke="#1a1a1a" strokeWidth="6" fill="white" />
-                    <rect x="112" y="22" width="16" height="16" fill="#1a1a1a" />
-                    {/* Bottom Left Marker */}
-                    <rect x="10" y="100" width="40" height="40" stroke="#1a1a1a" strokeWidth="6" fill="white" />
-                    <rect x="22" y="112" width="16" height="16" fill="#1a1a1a" />
+        {/* Errors */}
+        <DocsSection id="errors" eyebrow="Reference" title="Errors">
+          <Split
+            aside={
+              <>
+                <CodePanel
+                  label="RESPONSE"
+                  status={{ text: '400 BAD REQUEST', ok: false }}
+                  json
+                  tabs={[{ id: '400', label: '400', code: NOT_ON_WHATSAPP_RESPONSE }]}
+                />
+                <CodePanel
+                  label="RESPONSE"
+                  status={{ text: '503 SERVICE UNAVAILABLE', ok: false }}
+                  json
+                  tabs={[{ id: '503', label: '503', code: NOT_CONNECTED_RESPONSE }]}
+                />
+              </>
+            }
+          >
+            <Prose>
+              Failed requests return a non-2xx status and a JSON body with a readable <InlineCode>message</InlineCode>.
+              Show or log that message; it tells you what to fix.
+            </Prose>
+            <DocsTable
+              head={['STATUS', 'WHAT HAPPENED', 'HOW TO FIX']}
+              rows={[
+                [
+                  '400',
+                  <span key="a">
+                    <InlineCode>phoneNumber</InlineCode> or <InlineCode>otp</InlineCode> missing
+                  </span>,
+                  'Send both fields as strings.',
+                ],
+                ['400', 'Invalid phone number', 'Use 10–15 digits with country code.'],
+                ['400', 'Number not on WhatsApp', 'Ask the user for a number that uses WhatsApp.'],
+                [
+                  '401',
+                  'Missing, invalid or revoked API key',
+                  <span key="b">
+                    Check the <InlineCode>x-api-key</InlineCode> header and that the key still exists.
+                  </span>,
+                ],
+                ['503', 'Your WhatsApp is not linked', 'Dashboard → WhatsApp Device → scan the QR again.'],
+              ]}
+            />
+          </Split>
+        </DocsSection>
 
-                    {/* Stylized QR Data Blocks */}
-                    <rect x="60" y="15" width="8" height="8" fill="#1a1a1a" />
-                    <rect x="75" y="15" width="14" height="8" fill="#1a1a1a" />
-                    <rect x="60" y="30" width="15" height="8" fill="#1a1a1a" />
-                    <rect x="80" y="30" width="10" height="15" fill="#1a1a1a" />
-                    <rect x="60" y="45" width="8" height="15" fill="#1a1a1a" />
-
-                    <rect x="15" y="60" width="15" height="8" fill="#1a1a1a" />
-                    <rect x="35" y="60" width="8" height="15" fill="#1a1a1a" />
-                    <rect x="50" y="60" width="20" height="8" fill="#1a1a1a" />
-                    <rect x="75" y="60" width="12" height="12" fill="#1a1a1a" />
-                    <rect x="95" y="60" width="10" height="8" fill="#1a1a1a" />
-                    <rect x="115" y="60" width="20" height="8" fill="#1a1a1a" />
-
-                    <rect x="15" y="75" width="8" height="15" fill="#1a1a1a" />
-                    <rect x="30" y="80" width="15" height="8" fill="#1a1a1a" />
-                    <rect x="55" y="75" width="10" height="15" fill="#1a1a1a" />
-                    <rect x="75" y="80" width="15" height="15" fill="#1a1a1a" />
-                    <rect x="100" y="75" width="8" height="15" fill="#1a1a1a" />
-                    <rect x="115" y="75" width="15" height="8" fill="#1a1a1a" />
-                    <rect x="135" y="80" width="8" height="15" fill="#1a1a1a" />
-
-                    <rect x="60" y="100" width="15" height="10" fill="#1a1a1a" />
-                    <rect x="80" y="105" width="8" height="15" fill="#1a1a1a" />
-                    <rect x="95" y="100" width="20" height="8" fill="#1a1a1a" />
-                    <rect x="120" y="100" width="15" height="15" fill="#1a1a1a" />
-
-                    <rect x="60" y="120" width="8" height="15" fill="#1a1a1a" />
-                    <rect x="75" y="125" width="18" height="8" fill="#1a1a1a" />
-                    <rect x="100" y="120" width="15" height="15" fill="#1a1a1a" />
-                    <rect x="125" y="125" width="15" height="8" fill="#1a1a1a" />
-                  </svg>
-                  <span className="font-mono text-[10px] font-bold text-[#524d43] mt-2 uppercase tracking-wider">
-                    Demo QR Code (Scan in App)
-                  </span>
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#2e6930] bg-[#eaf3eb] border border-[#2e6930] px-2.5 py-1">
-                  <span className="w-2 h-2 rounded-full bg-[#2e6930] animate-pulse" />
-                  <span>SESSION: READY FOR PAIRING</span>
-                </div>
-              </div>
-
-              {/* Right Column: 3 Steps to Scan */}
-              <div className="md:col-span-7 space-y-3">
-                <div className="border-2 border-[#1a1a1a] bg-[#fbf8f1] p-3 flex items-start gap-3">
-                  <span className="font-mono font-bold text-xs bg-[#1a1a1a] text-[#fbf8f1] px-2 py-0.5 shrink-0">
-                    1
-                  </span>
-                  <div>
-                    <div className="font-mono text-xs font-bold text-[#1a1a1a]">Open WhatsApp</div>
-                    <div className="font-serif text-xs text-[#524d43]">
-                      On your mobile phone, open WhatsApp and go to <strong>Settings &gt; Linked Devices</strong>.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-2 border-[#1a1a1a] bg-[#fbf8f1] p-3 flex items-start gap-3">
-                  <span className="font-mono font-bold text-xs bg-[#1a1a1a] text-[#fbf8f1] px-2 py-0.5 shrink-0">
-                    2
-                  </span>
-                  <div>
-                    <div className="font-mono text-xs font-bold text-[#1a1a1a]">Tap &quot;Link a Device&quot;</div>
-                    <div className="font-serif text-xs text-[#524d43]">
-                      Point your phone camera at the QR code displayed on your screen.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-2 border-[#2e6930] bg-[#eaf3eb] p-3 flex items-start gap-3">
-                  <span className="font-mono font-bold text-xs bg-[#2e6930] text-[#fbf8f1] px-2 py-0.5 shrink-0">
-                    ✓
-                  </span>
-                  <div>
-                    <div className="font-mono text-xs font-bold text-[#2e6930]">Instant Pairing</div>
-                    <div className="font-serif text-xs text-[#2e6930]">
-                      Your device connects in &lt; 5 seconds. Sessions remain persistently active 24/7.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =========================================================
-            STEP 3: API SPECIFICATION & CODE SNIPPETS
-           ========================================================= */}
-        <section id="step-3" className="space-y-6 scroll-mt-24 pt-4 border-t-2 border-[#1a1a1a]">
-          <div className="flex items-center gap-3">
-            <span className="w-10 h-10 flex items-center justify-center font-mono font-black text-sm bg-[#7a2020] text-[#fbf8f1] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a]">
-              03
-            </span>
-            <div>
-              <span className="text-[11px] font-mono font-bold uppercase text-[#7a2020] tracking-wider block">
-                STEP 3 • REST API CALL
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#1a1a1a]">
-                Dispatch Requests via REST API
-              </h2>
-            </div>
-          </div>
-
-          {/* Endpoint Banner */}
-          <div className="border-2 border-[#1a1a1a] bg-[#ede5d3] p-4 flex flex-wrap items-center justify-between gap-3 shadow-[4px_4px_0px_#1a1a1a]">
-            <div className="flex items-center gap-2 font-mono text-sm">
-              <span className="bg-[#2e6930] text-[#fbf8f1] px-2 py-0.5 font-bold border border-[#1a1a1a]">
-                POST
-              </span>
-              <span className="font-black text-[#1a1a1a]">{apiUrl}/send-otp</span>
-            </div>
-            <Badge variant="ink">application/json</Badge>
-          </div>
-
-          {/* Parameters Table */}
-          <div className="border-2 border-[#1a1a1a] bg-[#fbf8f1] shadow-[4px_4px_0px_#1a1a1a] overflow-x-auto">
-            <div className="bg-[#f4efe2] border-b-2 border-[#1a1a1a] px-4 py-2 font-mono text-xs font-bold text-[#1a1a1a] uppercase">
-              Payload Schema
-            </div>
-            <table className="w-full text-left font-mono text-xs">
-              <thead>
-                <tr className="border-b border-[#1a1a1a] text-[#524d43]">
-                  <th className="p-3">KEY</th>
-                  <th className="p-3">TYPE</th>
-                  <th className="p-3">REQUIRED</th>
-                  <th className="p-3">EXAMPLE</th>
-                  <th className="p-3">DESCRIPTION</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1a1a1a]/20">
-                <tr>
-                  <td className="p-3 font-bold text-[#1a1a1a]">phoneNumber</td>
-                  <td className="p-3 text-[#7a2020]">string</td>
-                  <td className="p-3 font-bold text-[#7a2020]">Yes</td>
-                  <td className="p-3 text-[#524d43]">+8801712345678</td>
-                  <td className="p-3 text-[#524d43]">Recipient WhatsApp number. International (+8801712345678) or Bangladeshi local (01712345678) format</td>
-                </tr>
-                <tr>
-                  <td className="p-3 font-bold text-[#1a1a1a]">otp</td>
-                  <td className="p-3 text-[#7a2020]">string</td>
-                  <td className="p-3 font-bold text-[#7a2020]">Yes</td>
-                  <td className="p-3 text-[#524d43]">482910</td>
-                  <td className="p-3 text-[#524d43]">The verification code to send, shown with a one-tap copy button</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Error Responses Table */}
-          <div className="border-2 border-[#1a1a1a] bg-[#fbf8f1] shadow-[4px_4px_0px_#1a1a1a] overflow-x-auto">
-            <div className="bg-[#f4efe2] border-b-2 border-[#1a1a1a] px-4 py-2 font-mono text-xs font-bold text-[#1a1a1a] uppercase">
-              Error Responses
-            </div>
-            <table className="w-full text-left font-mono text-xs">
-              <thead>
-                <tr className="border-b border-[#1a1a1a] text-[#524d43]">
-                  <th className="p-3">STATUS</th>
-                  <th className="p-3">WHEN</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1a1a1a]/20">
-                {[
-                  ['400', 'phoneNumber or otp is missing, the number format is invalid, or the number is not registered on WhatsApp'],
-                  ['401', 'x-api-key header is missing, or the key is invalid or revoked'],
-                  ['503', 'Your WhatsApp device is not connected. Link it from the dashboard first'],
-                ].map(([status, when]) => (
-                  <tr key={status}>
-                    <td className="p-3 font-bold text-[#7a2020]">{status}</td>
-                    <td className="p-3 text-[#524d43]">{when}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <pre className="border-t border-[#1a1a1a] bg-[#f4efe2] p-3 font-mono text-xs text-[#1a1a1a] overflow-x-auto">
-{`{
-  "statusCode": 503,
-  "message": "WhatsApp device is not connected. Please connect your device in the WhatsApp Device tab first.",
-  "error": "Service Unavailable"
-}`}
-            </pre>
-          </div>
-
-          {/* Multi-Language Code Snippets */}
-          <div className="border-2 border-[#1a1a1a] bg-[#1a1a1a] text-[#fbf8f1] shadow-[6px_6px_0px_#1a1a1a]">
-            {/* Language Selector Bar */}
-            <div className="border-b-2 border-[#333333] bg-[#222222] px-4 py-2 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1">
-                {(['curl', 'nodejs', 'python', 'php'] as const).map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => setActiveTab(lang)}
-                    className={`px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider border-2 transition-all cursor-pointer ${
-                      activeTab === lang
-                        ? 'bg-[#fbf8f1] text-[#1a1a1a] border-[#fbf8f1] shadow-[2px_2px_0px_#7a2020]'
-                        : 'bg-transparent text-[#d4d4d4] border-transparent hover:border-[#524d43]'
-                    }`}
-                  >
-                    {lang === 'curl'
-                      ? 'cURL'
-                      : lang === 'nodejs'
-                      ? 'Node.js'
-                      : lang === 'python'
-                      ? 'Python'
-                      : 'PHP'}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => handleCopy(snippets[activeTab], 'snippet_' + activeTab)}
-                className="font-mono text-xs bg-[#fbf8f1] text-[#1a1a1a] px-3 py-1 font-bold hover:bg-[#ede5d3] cursor-pointer"
-              >
-                {copiedKey === 'snippet_' + activeTab ? '✓ COPIED' : 'COPY CODE'}
-              </button>
-            </div>
-
-            {/* Code Box */}
-            <div className="p-5 font-mono text-xs sm:text-sm overflow-x-auto leading-relaxed text-[#fbf8f1] max-h-[300px]">
-              <pre>
-                <code>{snippets[activeTab]}</code>
-              </pre>
-            </div>
-          </div>
-        </section>
-
-        {/* =========================================================
-            STEP 4: LIVE TERMINAL SIMULATOR (Realtime Live Demo)
-           ========================================================= */}
-        <section className="space-y-4 pt-4">
-          <div className="flex items-center gap-2">
-            <Badge variant="emerald">INTERACTIVE SIMULATION</Badge>
-            <span className="font-mono text-xs text-[#524d43] font-bold">REALTIME RUNNER</span>
-          </div>
-
-          <div className="border-2 border-[#1a1a1a] bg-[#f4efe2] p-6 shadow-[6px_6px_0px_#1a1a1a] space-y-6">
-            <div>
-              <h3 className="font-serif text-2xl font-black text-[#1a1a1a]">
-                Live Terminal Preview
-              </h3>
-              <p className="font-serif text-sm text-[#524d43] mt-1">
-                Test the parameters below and run the simulated terminal to see the live dispatch flow and expected JSON response.
-              </p>
-            </div>
-
-            {/* Input Form */}
-            <form onSubmit={handleRunSimulation} className="space-y-4 bg-[#ede5d3] p-4 border-2 border-[#1a1a1a]">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-mono font-bold text-[#1a1a1a] mb-1">
-                    DEMO PHONE NUMBER
-                  </label>
-                  <input
-                    type="text"
-                    value={simPhone}
-                    onChange={(e) => setSimPhone(e.target.value)}
-                    className="w-full bg-[#fbf8f1] border border-[#1a1a1a] px-3 py-1.5 font-mono text-xs text-[#1a1a1a] focus:outline-none"
-                    placeholder="+8801712345678"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono font-bold text-[#1a1a1a] mb-1">
-                    DEMO OTP CODE
-                  </label>
-                  <input
-                    type="text"
-                    value={simOtp}
-                    onChange={(e) => setSimOtp(e.target.value)}
-                    className="w-full bg-[#fbf8f1] border border-[#1a1a1a] px-3 py-1.5 font-mono text-xs text-[#1a1a1a] focus:outline-none"
-                    placeholder="482910"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono font-bold text-[#1a1a1a] mb-1">
-                    API KEY (x-api-key)
-                  </label>
-                  <input
-                    type="text"
-                    value={simApiKey}
-                    onChange={(e) => setSimApiKey(e.target.value)}
-                    className="w-full bg-[#fbf8f1] border border-[#1a1a1a] px-3 py-1.5 font-mono text-xs text-[#1a1a1a] focus:outline-none"
-                    placeholder="_ars_2k03_..."
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  disabled={isSimulating}
-                  className="font-mono text-xs tracking-wider shadow-[3px_3px_0px_#1a1a1a]"
-                >
-                  {isSimulating ? 'EXECUTING IN TERMINAL...' : '▶ RUN TERMINAL TEST'}
-                </Button>
-                <span className="font-mono text-[11px] text-[#524d43] hidden sm:inline">
-                  Simulates realistic WebSocket queue &amp; dispatch
-                </span>
-              </div>
-            </form>
-
-            {/* Live Terminal Output Window */}
-            <div className="border-2 border-[#1a1a1a] bg-[#1a1a1a] text-[#fbf8f1] shadow-[4px_4px_0px_#1a1a1a] overflow-hidden">
-              {/* Terminal Window Chrome */}
-              <div className="border-b border-[#333333] bg-[#222222] px-4 py-2 flex items-center justify-between text-xs font-mono">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#eab308]" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-                  <span className="text-[#a3a3a3] ml-2 font-bold">bash ~ terminal</span>
-                </div>
-                {hasExecuted && (
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#2e6930] text-[#fbf8f1] px-1.5 py-0.5 text-[10px] font-bold">
-                      HTTP 200 OK
-                    </span>
-                    <span className="text-[#fef08a] text-[11px]">{simLatency}ms</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Terminal Execution Body */}
-              <div className="p-4 font-mono text-xs leading-relaxed space-y-3">
-                <div className="text-[#86efac]">
-                  <span className="text-[#a3a3a3]">$ </span>
-                  curl -X POST &quot;{apiUrl}/send-otp&quot; -H &quot;x-api-key: {simApiKey}&quot; -d &apos;{`{"phoneNumber":"${simPhone}","otp":"${simOtp}"}`}&apos;
-                </div>
-
-                {isSimulating ? (
-                  <div className="text-[#fef08a] animate-pulse py-4">
-                    [INFO] Handshaking with Baileys socket session...
+        {/* Message preview */}
+        <DocsSection id="message-preview" eyebrow="Reference" title="What your users receive">
+          <Split
+            aside={
+              <div className="bg-[#efeae2] border-2 border-[#1a1a1a] shadow-[4px_4px_0px_#1a1a1a] p-5 max-w-sm">
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden font-sans">
+                  <div className="px-3 pt-2.5 pb-1 text-[14.5px] text-[#111111] leading-snug">
+                    <strong>{EXAMPLE_OTP}</strong> is your verification code.
                     <br />
-                    [INFO] Encrypting and dispatching verification packet to WhatsApp server...
+                    <br />
+                    For your security, do not share this code.
                   </div>
-                ) : hasExecuted ? (
-                  <div className="space-y-2">
-                    <div className="text-[#93c5fd]">
-                      HTTP/1.1 200 OK
-                      <br />
-                      Content-Type: application/json; charset=utf-8
-                      <br />
-                      Date: {simDate}
-                    </div>
-                    <pre className="text-[#86efac] bg-[#111111] p-3 border border-[#333333] overflow-x-auto">
-{JSON.stringify(
-  {
-    statusCode: 200,
-    success: true,
-    message: 'OTP sent successfully',
-    data: {
-      messageId: simMsgId,
-      recipientJid: `${simPhone.replace(/\D/g, '').replace(/^0/, '880')}@s.whatsapp.net`,
-    },
-  },
-  null,
-  2
-)}
-                    </pre>
+                  <div className="px-3 pb-2 flex justify-between gap-2 text-[12.5px] text-[#667781]">
+                    <span>This code expires in 5 minutes</span>
+                    <span>10:18</span>
                   </div>
-                ) : null}
+                  <div className="border-t border-[#e9edef] text-center py-2.5 text-[14.5px] font-medium text-[#027eb5]">
+                    ⧉ Copy Code
+                  </div>
+                </div>
               </div>
-            </div>
+            }
+          >
+            <Prose>
+              The message comes from your linked WhatsApp number. The code is shown in bold, and the{' '}
+              <strong>Copy Code</strong> button copies it in one tap.
+            </Prose>
+            <Callout tone="warn" title='ABOUT "EXPIRES IN 5 MINUTES"'>
+              This footer text is fixed. WA Gateway does not expire codes; your app decides how long a code stays
+              valid.
+            </Callout>
+          </Split>
+        </DocsSection>
+
+        {/* Next steps */}
+        <section>
+          <h2 className="font-serif text-[28px] font-black text-[#1a1a1a] mb-4">Next steps</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { title: 'Open the dashboard →', body: 'Link WhatsApp and create your first key.' },
+              { title: 'Try the Message Tester →', body: 'Send a real OTP without writing code.' },
+            ].map((card) => (
+              <Link
+                key={card.title}
+                href="/dashboard"
+                className="block border-2 border-[#1a1a1a] bg-[#fbf8f1] shadow-[4px_4px_0px_#1a1a1a] p-4 hover:bg-[#f4efe2] transition-colors"
+              >
+                <div className="font-mono text-[13px] font-extrabold">{card.title}</div>
+                <p className="font-serif text-sm text-[#524d43] mt-1">{card.body}</p>
+              </Link>
+            ))}
           </div>
         </section>
-
-        {/* CTA Footer Card */}
-        <div className="border-2 border-[#1a1a1a] bg-[#ede5d3] p-8 text-center space-y-4 shadow-[4px_4px_0px_#1a1a1a]">
-          <h3 className="font-serif text-2xl font-black text-[#1a1a1a]">
-            Ready to integrate with your backend?
-          </h3>
-          <p className="font-serif text-sm text-[#524d43] max-w-md mx-auto">
-            Create your account now, link your WhatsApp account, and start sending messages instantly.
-          </p>
-          <div className="flex items-center justify-center gap-3 pt-2">
-            <Link href="/register">
-              <Button variant="primary" size="lg" className="shadow-[3px_3px_0px_#1a1a1a]">
-                Get Started Free →
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline" size="lg">
-                Go to Dashboard
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }
