@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { WhatsappSessionService } from '../whatsapp_session/whatsapp_session.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { createOtpCopyMessage, otpCopyMessageNodes } from './template/template.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
 
 @Injectable()
 export class WhatsappService {
-  constructor(private readonly sessionService: WhatsappSessionService) {}
+  constructor(
+    private readonly sessionService: WhatsappSessionService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Sends an OTP code using the specified WhatsApp session
@@ -67,4 +71,37 @@ export class WhatsappService {
 
     return { socket, jid: account.jid, userId: socket.user!.id };
   }
+
+  /**
+   * Retrieves message logs for a given user's API keys and WhatsApp sessions
+   */
+  async getMessageLogs(userId?: string) {
+    if (!userId) {
+      return [];
+    }
+
+    const [userApiKeys, userSessions] = await Promise.all([
+      this.prisma.apiKey.findMany({ where: { userId }, select: { key: true } }),
+      this.prisma.whatsAppSessionRecord.findMany({ where: { userId }, select: { sessionId: true } }),
+    ]);
+
+    const keys = userApiKeys.map((k) => k.key);
+    const sessionIds = userSessions.map((s) => s.sessionId);
+
+    if (keys.length === 0 && sessionIds.length === 0) {
+      return [];
+    }
+
+    return this.prisma.messageLog.findMany({
+      where: {
+        OR: [
+          { apiKey: { in: keys } },
+          { sessionId: { in: sessionIds } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+  }
 }
+

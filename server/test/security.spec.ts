@@ -88,23 +88,16 @@ describe('Security Hardening Specs', () => {
     });
 
     it('prevents linking another user session to an API key', async () => {
-      prismaMock.apiKey.findUnique.mockResolvedValue({
-        id: 'key_1',
-        key: '_ars_2k03_abc',
-        userId: 'attacker_user',
-      });
-
       prismaMock.whatsAppSessionRecord.findUnique.mockResolvedValue({
         sessionId: 'victim_session',
         userId: 'victim_user',
       });
 
       await expect(
-        apiKeyService.linkSessionToKey(
-          'key_1',
-          { sessionId: 'victim_session' },
-          'attacker_user',
-        ),
+        apiKeyService.createApiKey({
+          userId: 'attacker_user',
+          sessionId: 'victim_session',
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
   });

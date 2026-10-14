@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import { useRedisAuthState } from '../redis/redis-auth-state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { InitSessionDto } from './dto/init-session.dto.js';
-import { PairingCodeDto } from './dto/pairing-code.dto.js';
 
 export type WhatsAppConnectionStatus =
   | 'connecting'
@@ -505,44 +504,6 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
     session.lastError = error;
   }
 
-  /**
-   * Request pairing code for phone-number based linking (without camera scan)
-   */
-  async requestPairingCode(
-    sessionId: string,
-    body: PairingCodeDto | string,
-    userId?: string,
-  ): Promise<string> {
-    const resolvedSessionId = await this.resolveSessionId(sessionId, userId);
-    sessionId = resolvedSessionId;
-
-    if (userId) {
-      await this.verifySessionOwnership(sessionId, userId);
-    }
-
-    const phoneNumber = typeof body === 'string' ? body : body.phoneNumber;
-    const session = this.sessions.get(sessionId);
-    if (!session || !session.socket) {
-      throw new BadRequestException(
-        `Session "${sessionId}" is not initialized. Please call /sessions/:sessionId/init first.`,
-      );
-    }
-
-    let cleanNumber = phoneNumber.replace(/\D/g, '');
-    if (cleanNumber.startsWith('0')) {
-      cleanNumber = `880${cleanNumber.slice(1)}`;
-    }
-
-    try {
-      const code = await session.socket.requestPairingCode(cleanNumber);
-      return code;
-    } catch (err: any) {
-      throw new BadRequestException(
-        `Failed to request pairing code: ${err?.message || 'Unknown error'}`,
-      );
-    }
-  }
-
   async getSessionStatus(
     sessionId: string = this.defaultSessionId,
     userId?: string,
@@ -595,35 +556,6 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
       };
     }
     return this.toSessionInfo(session);
-  }
-
-  async getAllSessions(userId?: string): Promise<SessionInfo[]> {
-    if (!userId) {
-      return Array.from(this.sessions.values()).map((s) =>
-        this.toSessionInfo(s),
-      );
-    }
-
-    // Query all sessions created by this user
-    const dbSessions = await this.prisma.whatsAppSessionRecord.findMany({
-      where: { userId },
-      select: { sessionId: true },
-    });
-    const userSessionIds = new Set(dbSessions.map((s) => s.sessionId));
-
-    // Also include any active memory sessions created by this user
-    for (const [id, s] of this.sessions.entries()) {
-      if (s.userId === userId) {
-        userSessionIds.add(id);
-      }
-    }
-
-    const result: SessionInfo[] = [];
-    for (const id of userSessionIds) {
-      const info = await this.getSessionStatus(id, userId);
-      result.push(info);
-    }
-    return result;
   }
 
   async deleteSession(sessionId: string, userId?: string): Promise<void> {

@@ -73,42 +73,7 @@ export class WhatsappController {
   @Get('message-logs')
   @UseGuards(AuthGuard)
   async getMessageLogs(@Req() req: AuthenticatedUserRequest) {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return {
-        statusCode: HttpStatus.OK,
-        success: true,
-        data: [],
-      };
-    }
-
-    const [userApiKeys, userSessions] = await Promise.all([
-      this.prisma.apiKey.findMany({ where: { userId }, select: { key: true } }),
-      this.prisma.whatsAppSessionRecord.findMany({ where: { userId }, select: { sessionId: true } }),
-    ]);
-
-    const keys = userApiKeys.map((k) => k.key);
-    const sessionIds = userSessions.map((s) => s.sessionId);
-
-    if (keys.length === 0 && sessionIds.length === 0) {
-      return {
-        statusCode: HttpStatus.OK,
-        success: true,
-        data: [],
-      };
-    }
-
-    const logs = await this.prisma.messageLog.findMany({
-      where: {
-        OR: [
-          { apiKey: { in: keys } },
-          { sessionId: { in: sessionIds } },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    });
+    const logs = await this.whatsappService.getMessageLogs(req.user?.id);
 
     return {
       statusCode: HttpStatus.OK,

@@ -1,7 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiKeyService } from './api_key.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
-import { LinkSessionDto } from './dto/link-session.dto.js';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/guards/auth.guard.js';
 
 @Controller('api-keys')
@@ -48,35 +47,6 @@ export class ApiKeyController {
     };
   }
 
-  @Put(':keyId/link-session')
-  async linkSession(
-    @Param('keyId') keyId: string,
-    @Body() body: LinkSessionDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    const updated = await this.apiKeyService.linkSessionToKey(keyId, body, req.user?.id);
-    return {
-      statusCode: HttpStatus.OK,
-      success: true,
-      message: `Session "${body.sessionId}" linked to API key successfully`,
-      data: updated,
-    };
-  }
-
-  @Put(':keyId/revoke')
-  async revokeApiKey(
-    @Param('keyId') keyId: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    const revoked = await this.apiKeyService.revokeApiKey(keyId, req.user?.id);
-    return {
-      statusCode: HttpStatus.OK,
-      success: true,
-      message: 'API Key revoked successfully',
-      data: revoked,
-    };
-  }
-
   @Delete(':keyId')
   async deleteApiKey(
     @Param('keyId') keyId: string,
@@ -91,4 +61,3 @@ export class ApiKeyController {
     };
   }
 }
-

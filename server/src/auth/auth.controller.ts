@@ -1,10 +1,8 @@
-import { Body, Controller, Get, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
-import { AuthGuard } from './guards/auth.guard.js';
-import { CurrentUser } from './decorators/current-user.decorator.js';
-import type { AuthenticatedUser } from './interfaces/jwt-payload.interface.js';
+import { AuthGuard, type AuthenticatedRequest } from './guards/auth.guard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -22,11 +20,11 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async me(@CurrentUser() user: AuthenticatedUser) {
+  async me(@Req() req: AuthenticatedRequest) {
     return {
       statusCode: HttpStatus.OK,
       success: true,
-      data: user ? { id: user.id, name: user.name, email: user.email } : null,
+      data: req.user ? { id: req.user.id, name: req.user.name, email: req.user.email } : null,
     };
   }
 }

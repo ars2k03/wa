@@ -2,7 +2,6 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundEx
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
-import { LinkSessionDto } from './dto/link-session.dto.js';
 
 export interface CachedApiKey {
   id: string;
@@ -67,7 +66,7 @@ export class ApiKeyService {
       },
     });
 
-    this.logger.log(`Created new API Key for user: ${userId}`);
+    
     return record;
   }
 
@@ -126,47 +125,6 @@ export class ApiKeyService {
   }
 
   /**
-   * Links or updates a WhatsApp session ID for an API Key
-   */
-  async linkSessionToKey(keyId: string, body: LinkSessionDto, userId?: string) {
-    const existing = await this.prisma.apiKey.findUnique({
-      where: { id: keyId },
-    });
-
-    if (!existing) {
-      throw new NotFoundException(`API Key "${keyId}" not found`);
-    }
-
-    if (userId && existing.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to modify this API key');
-    }
-
-    const { sessionId } = body;
-
-    // Ensure linked session belongs to this user if specified
-    if (sessionId && (userId || existing.userId)) {
-      const ownerId = userId || existing.userId;
-      const sessionRecord = await this.prisma.whatsAppSessionRecord.findUnique({
-        where: { sessionId },
-      });
-      if (sessionRecord && sessionRecord.userId !== ownerId) {
-        throw new ForbiddenException(
-          `You cannot link session "${sessionId}" because it belongs to another user`,
-        );
-      }
-    }
-
-    const updated = await this.prisma.apiKey.update({
-      where: { id: keyId },
-      data: { sessionId },
-    });
-
-    // Invalidate memory cache so next request picks up the new session
-    this.memoryCache.delete(updated.key);
-    return updated;
-  }
-
-  /**
    * Returns all API Keys for a specific user
    */
   async getUserApiKeys(userId: string) {
@@ -174,32 +132,6 @@ export class ApiKeyService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
-  }
-
-  /**
-   * Revokes (deactivates) an API Key
-   */
-  async revokeApiKey(keyId: string, userId?: string) {
-    const record = await this.prisma.apiKey.findUnique({
-      where: { id: keyId },
-    });
-
-    if (!record) {
-      throw new NotFoundException(`API Key "${keyId}" not found`);
-    }
-
-    if (userId && record.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to revoke this API key');
-    }
-
-    const updated = await this.prisma.apiKey.update({
-      where: { id: keyId },
-      data: { isActive: false },
-    });
-
-    this.memoryCache.delete(record.key);
-    this.logger.log(`Revoked API Key: ${keyId}`);
-    return updated;
   }
 
   /**
