@@ -1,0 +1,422 @@
+{
+  "info": {
+    "_postman_id": "whatsapp-otp-gateway-collection-v1",
+    "name": "WhatsApp OTP Gateway API",
+    "description": "Complete Postman collection for WhatsApp OTP Gateway. Includes automatic token and API key capture.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3002",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "session_01",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "me",
+      "type": "string"
+    },
+    {
+      "key": "keyId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. System & Health",
+      "item": [
+        {
+          "name": "Check Health & Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Public health check endpoint returning server status and default WhatsApp session status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"developer@example.com\",\n  \"name\": \"Test Developer\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Creates an unverified user account and dispatches a 6-digit email OTP via Gmail API."
+          },
+          "response": []
+        },
+        {
+          "name": "Login User (Auto Saves Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.token) {",
+                  "        pm.collectionVariables.set('token', json.data.token);",
+                  "        if (json.data.user && json.data.user.id) {",
+                  "            pm.collectionVariables.set('userId', json.data.user.id);",
+                  "        }",
+                  "        console.log('✅ JWT Token automatically saved to collection variables!');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"developer@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates user and automatically stores the JWT token in collection variables for subsequent requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Fetches current authenticated operator user profile."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Email OTP Verification",
+      "item": [
+        {
+          "name": "Send Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"developer@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/otp/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["otp", "send"]
+            },
+            "description": "Sends a fresh 6-digit OTP code to the given email address using Gmail API."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"developer@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/otp/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["otp", "verify"]
+            },
+            "description": "Validates 6-digit email verification code and activates user account."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. API Key Management",
+      "item": [
+        {
+          "name": "Create API Key (Auto Saves Key)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.key) {",
+                  "        pm.collectionVariables.set('apiKey', json.data.key);",
+                  "        console.log('✅ API Key saved to collection variables!');",
+                  "    }",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.collectionVariables.set('keyId', json.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Testing Key\",\n  \"sessionId\": \"{{sessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api-keys",
+              "host": ["{{baseUrl}}"],
+              "path": ["api-keys"]
+            },
+            "description": "Generates a new prefixed API Key (_ars_2k03_...) and automatically saves it to collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "List User API Keys",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api-keys/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api-keys", "{{userId}}"]
+            },
+            "description": "Lists all API Keys created by the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete API Key",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api-keys/{{keyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api-keys", "{{keyId}}"]
+            },
+            "description": "Revokes and deletes an API key by keyId."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. WhatsApp Device Sessions",
+      "item": [
+        {
+          "name": "Init WhatsApp Session (Get QR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{sessionId}}/init",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions", "{{sessionId}}", "init"]
+            },
+            "description": "Initializes Baileys socket for sessionId and returns Base64 QR code for phone pairing."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{sessionId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions", "{{sessionId}}", "status"]
+            },
+            "description": "Checks whether the session is qr_ready, connecting, connected, or disconnected."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete WhatsApp Session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions", "{{sessionId}}"]
+            },
+            "description": "Closes socket, clears Redis auth credentials, and deletes session."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. WhatsApp Messaging & Logs",
+      "item": [
+        {
+          "name": "Send WhatsApp OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"01700000000\",\n  \"otp\": \"592104\",\n  \"sessionId\": \"{{sessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/send-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["send-otp"]
+            },
+            "description": "Dispatches WhatsApp OTP message containing interactive copy-code button via authenticated API key."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Message Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/message-logs",
+              "host": ["{{baseUrl}}"],
+              "path": ["message-logs"]
+            },
+            "description": "Retrieves last 100 message delivery audit logs for current user's keys and sessions."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
