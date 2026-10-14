@@ -39,16 +39,21 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text);
       return true;
     }
-    // Fallback for older environments
+  } catch {
+    // Clipboard API blocked (no permission, page not focused, insecure origin): use the fallback.
+  }
+
+  // Fallback for older or restricted environments
+  try {
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
     textarea.style.opacity = '0';
     document.body.appendChild(textarea);
     textarea.select();
-    document.execCommand('copy');
+    const ok = document.execCommand('copy');
     document.body.removeChild(textarea);
-    return true;
+    return ok;
   } catch (err) {
     console.error('Failed to copy to clipboard:', err);
     return false;
@@ -59,8 +64,4 @@ export function maskApiKey(key: string): string {
   if (!key) return '';
   if (key.length <= 16) return key;
   return `${key.slice(0, 14)}...${key.slice(-6)}`;
-}
-
-export function cleanPhoneNumber(phone: string): string {
-  return phone.replace(/[^\d+]/g, '');
 }

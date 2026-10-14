@@ -58,5 +58,3 @@ export function DocsNavbar() {
     </header>
   );
 }
-
-export default DocsNavbar;

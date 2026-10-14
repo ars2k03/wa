@@ -85,7 +85,7 @@ export function TerminalDemo({ apiUrl }: { apiUrl: string }) {
       }
     } else if (phase === 'running') {
       t = setTimeout(() => {
-        // Baileys message IDs: "3EB0" + 18 uppercase hex chars.
+        // WhatsApp message IDs: "3EB0" + 18 uppercase hex chars.
         const hex = Array.from({ length: 18 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
         setResponse(buildResponse(sample.phone, `3EB0${hex.toUpperCase()}`));
         setPhase('response');

@@ -13,6 +13,7 @@ const GROUPS: SidebarGroup[] = [
     title: 'Getting started',
     links: [
       { id: 'introduction', label: 'Introduction' },
+      { id: 'how-it-works', label: 'How it works' },
       { id: 'quickstart', label: 'Quickstart' },
     ],
   },
@@ -21,6 +22,7 @@ const GROUPS: SidebarGroup[] = [
     links: [
       { id: 'authentication', label: 'Authentication' },
       { id: 'phone-format', label: 'Phone number format' },
+      { id: 'rate-limits', label: 'Rate limits' },
     ],
   },
   {
@@ -28,10 +30,20 @@ const GROUPS: SidebarGroup[] = [
     links: [{ id: 'send-otp', label: '/send-otp', method: 'POST' }],
   },
   {
+    title: 'Guides',
+    links: [
+      { id: 'verify-codes', label: 'Verify OTP codes' },
+      { id: 'handle-errors', label: 'Handle errors' },
+    ],
+  },
+  {
     title: 'Reference',
     links: [
-      { id: 'errors', label: 'Errors' },
+      { id: 'errors', label: 'Error codes' },
       { id: 'message-preview', label: 'What users receive' },
+      { id: 'message-logs', label: 'Message logs' },
+      { id: 'best-practices', label: 'Best practices' },
+      { id: 'faq', label: 'FAQ' },
     ],
   },
 ];
