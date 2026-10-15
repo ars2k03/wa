@@ -33,23 +33,30 @@ This frontend departs from generic SaaS dashboard templates by implementing a di
 ### 2. Authentication Suite (`/(auth)`)
 * **Register (`/register`)**: Account creation with validation and automatic 6-digit email OTP dispatch via Gmail API.
 * **Email Verification (`/verify`)**: Dedicated 6-digit OTP code input screen with countdown timer and resend functionality.
-* **Login (`/login`)**: Operator authentication with persistent JWT session management (`AuthContext`) and one-click demo credentials for zero-friction testing.
+* **Login (`/login`)**: Operator authentication with persistent JWT session management (`AuthContext`).
 
 ### 3. Central Dispatch Console (`/dashboard`)
-* **Apparatus Link (QR Pairing)**:
-  * Live Base64 QR code rendering with auto-polling (every 2.5 seconds).
-  * Direct 8-digit numeric pairing PIN code support as an alternative to QR scanning.
-  * Instant status indicator (`qr_ready`, `connecting`, `connected`, `disconnected`).
-* **API Key Minting Console**:
+* **WhatsApp Device (QR Pairing)**:
+  * Live Base64 QR code rendering with adaptive status polling (every 2.5 seconds while pairing, 5 seconds otherwise).
+  * Instant status indicator (`qr_ready`, `connecting`, `connected`, `disconnected`) and the linked phone number.
+* **API Keys**:
   * Mint unique cryptographic keys (`_ars_2k03_...`).
-  * One-click clipboard copy, session binding, and permanent key revocation.
-* **Live OTP Tester**:
-  * Classified-ad style form to dispatch real authenticated WhatsApp messages directly to `/send-otp`.
-  * Real-time network latency measurement and live response tape inspector.
-* **Message Ledger**:
-  * Ruled ledger table listing dispatched messages, recipient numbers, delivery states, and unique Baileys message IDs.
-* **API Documentation Viewer**:
-  * Built-in REST reference covering headers, request bodies, and error codes.
+  * One-click clipboard copy and permanent key revocation.
+* **Custom Template**:
+  * Edit the WhatsApp OTP message: body with `{{code}}`, footer, and an optional one-tap copy button with custom label.
+  * Live WhatsApp-style preview, length limits, and one-click reset to the default template.
+* **Playground**:
+  * Form to send real WhatsApp OTPs through `/send-otp` with your API key.
+  * Request latency measurement and a response inspector with copy-as-JSON.
+* **Message Logs**:
+  * Table of sent messages with recipient numbers, delivery status, and Baileys message IDs.
+* **Usage**:
+  * Today's and this month's OTP usage against the limits (100/day, 3,000/month, Bangladesh time), reset times, and a 30-day history chart.
+
+### 4. Developer Docs (`/docs`)
+* Public integration guide: quickstart, authentication, phone number format, rate & usage limits, sending and verifying OTPs, error handling, message preview, custom templates, message logs, best practices, and FAQ.
+* Ready-to-copy code samples in **cURL**, **Node.js**, **Python**, **PHP**, and **Go** with a synced language picker.
+* Mobile-friendly layout: code blocks scroll sideways only on small screens, so the page always scrolls normally.
 
 ---
 
@@ -65,15 +72,16 @@ frontend/
 │   │   │   ├── register/   # Sign-up page
 │   │   │   └── verify/     # Email OTP verification page
 │   │   ├── (homepage)/     # Broadsheet landing page
-│   │   ├── dashboard/      # Operator console (QR, Keys, Tester, Ledger)
+│   │   ├── dashboard/      # Operator console (Device, Keys, Template, Playground, Logs, Usage)
+│   │   ├── docs/           # Public developer documentation page
 │   │   ├── globals.css     # Tailwind v4 theme, fonts & print styling
 │   │   └── layout.tsx      # Root HTML & body shell
 │   ├── components/         # Reusable UI elements, terminals, forms & tables
-│   ├── context/            # AuthContext (JWT, user state, localStorage)
-│   ├── hooks/              # Custom React hooks (polling, clipboard, etc.)
+│   ├── context/            # AuthContext (JWT, user state) & DashboardTabContext
+│   ├── hooks/              # Data hooks (session polling, API keys, logs, OTP template, usage)
 │   ├── lib/                # API client wrapper & HTTP helpers
-│   ├── types/              # TypeScript interfaces (User, Session, ApiKey)
-│   └── utils/              # Formatting & helper utilities
+│   ├── types/              # TypeScript interfaces (User, Session, ApiKey, ...)
+│   └── utils/              # Helpers, docs code snippets & OTP template validation
 ├── .env.example            # Environment variables template
 ├── .env.local              # Local environment configuration
 ├── next.config.ts          # Next.js configuration
@@ -127,6 +135,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3002
    Open your browser and navigate to:
    * **Landing Page**: [http://localhost:3000](http://localhost:3000)
    * **Operator Console**: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
+   * **Developer Docs**: [http://localhost:3000/docs](http://localhost:3000/docs)
 
 ---
 
