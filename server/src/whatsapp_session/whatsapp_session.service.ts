@@ -445,6 +445,9 @@ export class WhatsappSessionService implements OnModuleInit, OnModuleDestroy {
             `[Session: ${session.sessionId}] WhatsApp session logged out. Needs fresh QR scan.`,
           );
           void this.redis?.srem(REDIS_SESSIONS_SET, session.sessionId);
+          // Drop the revoked creds so the next connect starts fresh and gets a new QR,
+          // instead of retrying the dead creds and hitting loggedOut again.
+          await this.redis?.del(redisSessionKey);
           await this.syncSessionToDatabase(session);
         } else if (
           statusCode === DisconnectReason.connectionReplaced ||
