@@ -141,9 +141,13 @@ export function OtpTemplateTab() {
               <span className="font-mono text-xs font-black uppercase tracking-wider text-[#1a1a1a]">
                 MESSAGE EDITOR
               </span>
-              {isDirty && (
-                <span className="font-mono text-[11px] font-bold text-[#b45309]">● UNSAVED CHANGES</span>
-              )}
+              {/* Always rendered so the header never changes size */}
+              <span
+                className={`font-mono text-[11px] font-bold text-[#b45309] ${isDirty ? '' : 'invisible'}`}
+                aria-hidden={!isDirty}
+              >
+                ● UNSAVED CHANGES
+              </span>
             </div>
 
             {/* Body */}
@@ -248,16 +252,33 @@ export function OtpTemplateTab() {
               )}
             </div>
 
-            {(saveError || (isDirty && validationError)) && (
-              <div className="p-3 bg-[#fae8e8] border-2 border-[#7a2020] text-[#7a2020] font-mono text-xs font-bold">
-                ! {saveError || validationError}
-              </div>
-            )}
-            {savedNotice && (
-              <div className="p-3 bg-[#eef7ee] border-2 border-[#1b4332] text-[#1b4332] font-mono text-xs font-bold">
-                ✓ SAVED. Your next OTP will use this message.
-              </div>
-            )}
+            {/* Status slot: always takes the same space, only its content and colour change,
+                so the buttons below never jump when an error or "saved" notice appears. */}
+            {(() => {
+              const errorText = saveError || (isDirty ? validationError : null);
+              const tone = errorText
+                ? 'bg-[#fae8e8] border-[#7a2020] text-[#7a2020]'
+                : savedNotice
+                  ? 'bg-[#eef7ee] border-[#1b4332] text-[#1b4332]'
+                  : 'bg-transparent border-[#1a1a1a]/15 text-[#524d43]';
+              return (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className={`min-h-[46px] flex items-center p-3 border-2 font-mono text-xs font-bold transition-colors ${tone}`}
+                >
+                  {errorText
+                    ? `! ${errorText}`
+                    : savedNotice
+                      ? '✓ SAVED. Your next OTP will use this message.'
+                      : isDirty
+                        ? '✓ Looks good. Save to start using it.'
+                        : isCustom
+                          ? 'Your custom template is active.'
+                          : 'The default message is active.'}
+                </div>
+              );
+            })()}
 
             <div className="pt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#1a1a1a]/20">
               {isCustom ? (
