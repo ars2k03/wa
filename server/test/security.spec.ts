@@ -79,10 +79,8 @@ describe('Security Hardening Specs', () => {
       };
       configMock = {
         get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GMAIL_CLIENT_ID') return 'mock_client_id';
-          if (key === 'GMAIL_CLIENT_SECRET') return 'mock_client_secret';
-          if (key === 'GMAIL_REFRESH_TOKEN') return 'mock_refresh_token';
-          if (key === 'GMAIL_USER') return 'test@example.com';
+          if (key === 'RESEND_API_KEY') return 're_mock_key';
+          if (key === 'MAIL_FROM') return 'Test <test@example.com>';
           return null;
         }),
       };

@@ -49,7 +49,7 @@ export class AuthService {
       });
     }
 
-    // Send 6-digit OTP via official Gmail API
+    // Send 6-digit OTP via Resend
     await this.otpService.sendOtp(email);
 
     return {
