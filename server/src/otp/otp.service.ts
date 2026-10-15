@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
@@ -71,8 +71,9 @@ export class OtpService {
     // Dispatch email using official Gmail API
     await this.sendGmailMessage(
       email,
-      'Verification Code - WA Gateway',
+      `${otp} is your WA Gateway verification code`,
       this.buildOtpHtml(otp),
+      this.buildOtpText(otp),
     );
 
     return {
@@ -161,20 +162,38 @@ export class OtpService {
     };
   }
 
-  private async sendGmailMessage(to: string, subject: string, htmlContent: string) {
+  private async sendGmailMessage(
+    to: string,
+    subject: string,
+    htmlContent: string,
+    textContent: string,
+  ) {
     try {
       const gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
 
       const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+      const boundary = `wa_gateway_${randomBytes(12).toString('hex')}`;
+
+      // multipart/alternative with plain-text first and HTML last (preferred part),
+      // base64-encoded so long HTML lines never break the 998-char SMTP line limit
       const messageParts = [
         `From: "WA Gateway" <${this.senderEmail}>`,
         `To: <${to}>`,
         `Subject: ${utf8Subject}`,
         'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        'Content-Transfer-Encoding: 7bit',
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
         '',
-        htmlContent,
+        `--${boundary}`,
+        'Content-Type: text/plain; charset=utf-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        this.toMimeBase64(textContent),
+        `--${boundary}`,
+        'Content-Type: text/html; charset=utf-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        this.toMimeBase64(htmlContent),
+        `--${boundary}--`,
       ];
 
       const rawMessage = messageParts.join('\r\n');
@@ -198,6 +217,27 @@ export class OtpService {
         `Failed to dispatch verification email: ${err?.message || 'Gmail API error'}`,
       );
     }
+  }
+
+  private toMimeBase64(content: string): string {
+    return Buffer.from(content, 'utf-8').toString('base64').replace(/.{76}/g, '$&\r\n');
+  }
+
+  private buildOtpText(otp: string): string {
+    return [
+      'WA Gateway Verification',
+      '',
+      'Please use the verification code below to complete your account registration:',
+      '',
+      `    ${otp}`,
+      '',
+      'This code expires in 10 minutes.',
+      '',
+      'If you did not request this verification code, please ignore this email.',
+      '',
+      '--',
+      'WhatsApp OTP Gateway - Secure Authentication Service',
+    ].join('\r\n');
   }
 
   private buildOtpHtml(otp: string): string {
