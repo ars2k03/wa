@@ -10,7 +10,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { ApiKeyModule } from './api_key/api_key.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { OtpModule } from './otp/otp.module.js';
-import { TemplateModule } from './template/template.module.js';
+import { OtpTemplateModule } from './otp_template/otp_template.module.js';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { TemplateModule } from './template/template.module.js';
     AuthModule,
     OtpModule,
     ApiKeyModule,
-    TemplateModule,
+    OtpTemplateModule,
     WhatsappSessionModule,
     WhatsappModule,
   ],

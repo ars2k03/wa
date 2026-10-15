@@ -19,9 +19,9 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  apiKeys   ApiKey[]
-  sessions  WhatsAppSessionRecord[]
-  templates MessageTemplate[]
+  apiKeys     ApiKey[]
+  sessions    WhatsAppSessionRecord[]
+  otpTemplate OtpTemplate?
 
   @@map("users")
 }
@@ -60,35 +60,32 @@ model WhatsAppSessionRecord {
 }
 
 model MessageLog {
-  id           String   @id @default(uuid())
-  sessionId    String   @map("session_id")
-  apiKey       String?  @map("api_key")
-  recipient    String
-  messageType  String   @default("otp") @map("message_type")
-  messageId    String?  @map("message_id")
-  // Snapshot of the template used, kept even if the template is later deleted
-  templateId   String?  @map("template_id")
-  templateName String?  @map("template_name")
-  status       String   @default("sent")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid())
+  sessionId   String   @map("session_id")
+  apiKey      String?  @map("api_key")
+  recipient   String
+  messageType String   @default("otp") @map("message_type")
+  messageId   String?  @map("message_id")
+  status      String   @default("sent")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([sessionId])
   @@index([apiKey])
   @@map("message_logs")
 }
 
-model MessageTemplate {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  name      String
-  body      String
-  variables String[] @default([])
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+// A user's custom OTP message. At most one per user; without it the default message is sent.
+model OtpTemplate {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  body           String
+  footer         String?
+  showCopyButton Boolean  @default(true) @map("show_copy_button")
+  copyButtonText String   @default("Copy Code") @map("copy_button_text")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, name])
-  @@index([userId])
-  @@map("message_templates")
+  @@map("otp_templates")
 }

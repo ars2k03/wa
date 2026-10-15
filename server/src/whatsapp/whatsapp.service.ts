@@ -1,18 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { WhatsappSessionService } from '../whatsapp_session/whatsapp_session.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { createOtpCopyMessage, otpCopyMessageNodes } from './template/template.js';
+import { createOtpMessage, otpCopyMessageNodes } from './template/template.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
+import { OtpTemplateService } from '../otp_template/otp_template.service.js';
 
 @Injectable()
 export class WhatsappService {
   constructor(
     private readonly sessionService: WhatsappSessionService,
     private readonly prisma: PrismaService,
+    private readonly otpTemplateService: OtpTemplateService,
   ) {}
 
   /**
-   * Sends an OTP code using the specified WhatsApp session
+   * Sends an OTP code using the specified WhatsApp session, formatted with the user's OTP template
    */
   async sendOtpCode(
     body: SendOtpDto,
@@ -21,8 +23,11 @@ export class WhatsappService {
   ): Promise<{ messageId: string; recipientJid: string }> {
     const { phoneNumber, otp } = body;
 
-    const { socket, jid, userId: senderJid } = await this.getRecipient(sessionId, phoneNumber, userId);
-    const content = createOtpCopyMessage(otp);
+    const [{ socket, jid, userId: senderJid }, template] = await Promise.all([
+      this.getRecipient(sessionId, phoneNumber, userId),
+      this.otpTemplateService.getEffectiveTemplate(userId),
+    ]);
+    const content = createOtpMessage(otp, template);
 
     const { generateWAMessageFromContent, generateMessageIDV2 } =
       await import('baileys');
@@ -34,29 +39,12 @@ export class WhatsappService {
 
     await socket.relayMessage(jid, message.message!, {
       messageId: message.key.id!,
-      additionalNodes: otpCopyMessageNodes(),
+      // The biz node is only needed for the interactive (copy button) variant
+      ...(template.showCopyButton && { additionalNodes: otpCopyMessageNodes() }),
     });
 
     return {
       messageId: message.key.id!,
-      recipientJid: jid,
-    };
-  }
-
-  /**
-   * Sends a plain text message using the specified WhatsApp session
-   */
-  async sendText(
-    phoneNumber: string,
-    text: string,
-    sessionId: string,
-    userId: string,
-  ): Promise<{ messageId: string; recipientJid: string }> {
-    const { socket, jid } = await this.getRecipient(sessionId, phoneNumber, userId);
-    const sent = await socket.sendMessage(jid, { text });
-
-    return {
-      messageId: sent!.key.id!,
       recipientJid: jid,
     };
   }
