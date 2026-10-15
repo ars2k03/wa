@@ -43,6 +43,24 @@ export class WhatsappService {
     };
   }
 
+  /**
+   * Sends a plain text message using the specified WhatsApp session
+   */
+  async sendText(
+    phoneNumber: string,
+    text: string,
+    sessionId: string,
+    userId: string,
+  ): Promise<{ messageId: string; recipientJid: string }> {
+    const { socket, jid } = await this.getRecipient(sessionId, phoneNumber, userId);
+    const sent = await socket.sendMessage(jid, { text });
+
+    return {
+      messageId: sent!.key.id!,
+      recipientJid: jid,
+    };
+  }
+
   private async getRecipient(sessionId: string, phoneNumber: string, userId: string) {
     const socket = this.sessionService.getConnectedSocket(sessionId, userId);
 
