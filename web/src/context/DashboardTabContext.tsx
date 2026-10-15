@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-export type DashboardTab = 'device' | 'keys' | 'tester' | 'logs';
+export type DashboardTab = 'device' | 'keys' | 'otp-template' | 'tester' | 'logs';
 
 interface DashboardTabContextType {
   activeTab: DashboardTab;

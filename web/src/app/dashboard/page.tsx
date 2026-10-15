@@ -9,6 +9,7 @@ import { DeviceConnectTab } from '@/components/dashboard/DeviceConnectTab';
 import { ApiKeyManagerTab } from '@/components/dashboard/ApiKeyManagerTab';
 import { MessageTesterTab } from '@/components/dashboard/MessageTesterTab';
 import { MessageLogsTab } from '@/components/dashboard/MessageLogsTab';
+import { OtpTemplateTab } from '@/components/dashboard/OtpTemplateTab';
 
 function DashboardContent() {
   const router = useRouter();
@@ -54,6 +55,11 @@ function DashboardContent() {
         return {
           title: 'API Keys',
           desc: 'Create and manage secret API keys to authenticate your WhatsApp API requests',
+        };
+      case 'otp-template':
+        return {
+          title: 'Custom Template',
+          desc: 'Customize the OTP message, footer and Copy Code button your users receive',
         };
       case 'tester':
         return {
@@ -107,6 +113,8 @@ function DashboardContent() {
             onKeySelect={handleKeySelected}
           />
         )}
+
+        {activeTab === 'otp-template' && <OtpTemplateTab />}
 
         {activeTab === 'tester' && (
           <MessageTesterTab

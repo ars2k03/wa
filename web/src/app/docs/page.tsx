@@ -17,6 +17,7 @@ import {
   SubHeading,
 } from '@/components/docs/DocsUI';
 import { Marker, WhatsAppPreview } from '@/components/docs/WhatsAppPreview';
+import { CustomTemplateExample } from '@/components/docs/CustomTemplateExample';
 import {
   AUTH_SNIPPETS,
   ENV_SNIPPET,
@@ -38,7 +39,7 @@ const FLOW = [
 const FAQ = [
   {
     q: 'Can I change the message text?',
-    a: 'Not yet. Every OTP uses the same template shown in "What users receive". Only the code changes.',
+    a: 'Yes. In the dashboard under Custom Template you can write your own message with {{code}} where the code goes, change or remove the footer, and choose whether to show the Copy Code button. Without a custom template, the default message is sent.',
   },
   {
     q: 'Can I send to numbers outside Bangladesh?',
@@ -94,9 +95,9 @@ export default function DocsPage() {
 
           <ul className="mt-6 grid gap-3 max-w-[70ch]">
             {[
-              ['One endpoint', 'POST /send-otp is all you need. No templates to register, no approval process.'],
+              ['One endpoint', 'POST /send-otp is all you need. No WhatsApp template approval, no review process.'],
               ['Your own number', 'Messages come from the WhatsApp number you link, not an unknown sender.'],
-              ['One-tap copy', 'Every message has a Copy Code button, so users never retype the code.'],
+              ['Your own message', 'Use the default message or write your own, with or without a one-tap Copy Code button.'],
             ].map(([title, body]) => (
               <li key={title} className="flex gap-3 font-serif text-[#524d43]">
                 <span className="mt-1.5 w-2 h-2 shrink-0 bg-[#7a2020]" />
@@ -498,8 +499,13 @@ export default function DocsPage() {
           aside={<WhatsAppPreview otp={EXAMPLE_OTP} />}
         >
           <Prose>
-            This is exactly how the message looks in the user&apos;s WhatsApp. Try the <strong>Copy Code</strong>{' '}
-            button: it copies the code, just like on a real phone.
+            This is exactly how the <strong>default</strong> message looks in the user&apos;s WhatsApp. Try the{' '}
+            <strong>Copy Code</strong> button: it copies the code, just like on a real phone. You can replace this
+            message with your own; see{' '}
+            <a href="#custom-template" className="underline">
+              Custom template
+            </a>
+            .
           </Prose>
           <ol className="mt-5 space-y-4 max-w-[70ch]">
             {[
@@ -508,7 +514,7 @@ export default function DocsPage() {
                 'Your linked WhatsApp number. Users see your name instead if they saved you as a contact.',
               ],
               ['The code', 'Your otp value, in bold, followed by a short security warning.'],
-              ['Footer and time', 'A fixed note that the code expires in 5 minutes, and when it arrived.'],
+              ['Footer and time', 'A note that the code expires in 5 minutes, and when it arrived.'],
               [
                 'Copy Code button',
                 'One tap copies the code to the clipboard, so users can paste it into your app without typing.',
@@ -524,9 +530,60 @@ export default function DocsPage() {
             ))}
           </ol>
           <Callout tone="warn" title='ABOUT "EXPIRES IN 5 MINUTES"'>
-            This footer text is fixed. WA Gateway does not expire codes; your app decides how long a code stays valid.
-            Use 5 minutes so the message stays true.
+            WA Gateway does not expire codes; your app decides how long a code stays valid. With the default message,
+            use 5 minutes so the message stays true. If your codes last longer, change the footer in a custom template.
           </Callout>
+        </Split>
+      </DocsSection>
+
+      {/* ================================================================ Custom template */}
+      <DocsSection id="custom-template" eyebrow="Reference" title="Custom template">
+        <Split aside={<CustomTemplateExample otp={EXAMPLE_OTP} />}>
+          <Prose>
+            Don&apos;t want the default message? Write your own in{' '}
+            <strong>Dashboard → Custom Template</strong>. Once saved, every OTP you send uses it automatically. Your API
+            requests stay exactly the same; only the message your users see changes.
+          </Prose>
+
+          <SubHeading>What you can change</SubHeading>
+          <DocsTable
+            head={['PART', 'RULES']}
+            rows={[
+              [
+                'Message',
+                <>
+                  Any text up to 1024 characters. It must include <InlineCode>{'{{code}}'}</InlineCode> where the OTP
+                  goes.
+                </>,
+              ],
+              ['Footer', 'Optional small grey text under the message, up to 60 characters.'],
+              ['Copy Code button', 'Turn it on or off.'],
+              ['Button text', 'The button label, up to 20 characters. Defaults to "Copy Code".'],
+            ]}
+          />
+
+          <SubHeading>Writing the message</SubHeading>
+          <ul className="space-y-1.5 font-serif text-sm text-[#524d43] max-w-[70ch] list-disc pl-5">
+            <li>
+              <InlineCode>{'{{code}}'}</InlineCode> is the only placeholder. Write everything else, such as your app
+              name, directly in the text.
+            </li>
+            <li>
+              WhatsApp formatting works: <InlineCode>*bold*</InlineCode>, <InlineCode>_italic_</InlineCode>,{' '}
+              <InlineCode>~strike~</InlineCode> and <InlineCode>```mono```</InlineCode>. Emoji are fine too.
+            </li>
+            <li>The dashboard shows a live WhatsApp preview while you type, like the one on the right.</li>
+          </ul>
+
+          <Callout tone="tip" title="WITH OR WITHOUT THE BUTTON">
+            With the button on, the footer appears as small grey text and users can copy the code in one tap. With it
+            off, the message is sent as plain text and the footer becomes its last line, in italics. Use the switch on
+            the right to compare.
+          </Callout>
+
+          <Prose>
+            To go back to the default message, choose <strong>Reset to default</strong> on the same page.
+          </Prose>
         </Split>
       </DocsSection>
 

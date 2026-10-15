@@ -209,18 +209,25 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                 </label>
 
                 {activeKeys.length > 0 ? (
-                  <select
-                    className="w-full px-3 py-2.5 bg-[#f4efe2] border-2 border-[#1a1a1a] font-mono text-xs font-bold text-[#1a1a1a] focus:outline-none shadow-[2px_2px_0px_#1a1a1a]"
-                    value={selectedKey}
-                    onChange={(e) => setSelectedKey(e.target.value)}
-                  >
-                    <option value="">-- SELECT AN API KEY --</option>
-                    {activeKeys.map((k) => (
-                      <option key={k.id} value={k.key}>
-                        {k.name} ({k.key.slice(0, 16)}...)
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="w-full appearance-none px-3.5 py-2.5 pr-12 bg-[#ffffff] border-2 border-[#1a1a1a] font-mono text-xs font-bold text-[#1a1a1a] shadow-[2px_2px_0px_#1a1a1a] focus:outline-none focus:shadow-[3px_3px_0px_#7a2020] transition-all cursor-pointer"
+                      value={selectedKey}
+                      onChange={(e) => setSelectedKey(e.target.value)}
+                    >
+                      <option value="">-- SELECT AN API KEY --</option>
+                      {activeKeys.map((k) => (
+                        <option key={k.id} value={k.key}>
+                          {k.name} ({k.key.slice(0, 16)}...)
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 border-l-2 border-[#1a1a1a] bg-[#f4efe2] text-[#1a1a1a]">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="square" strokeLinejoin="miter" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
                 ) : (
                   <div className="p-3 bg-[#fae8e8] border-2 border-[#7a2020] text-xs font-mono text-[#7a2020] flex items-center justify-between gap-2">
                     <span>

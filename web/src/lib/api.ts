@@ -2,6 +2,8 @@ import type {
   ApiKey,
   ApiResponse,
   MessageLog,
+  OtpTemplate,
+  OtpTemplateContent,
   SendOtpPayload,
   SendOtpResult,
   SessionInfo,
@@ -141,6 +143,28 @@ export const api = {
 
   deleteApiKey: async (keyId: string): Promise<ApiResponse<any>> => {
     return fetchJson<ApiResponse<any>>(`/api-keys/${keyId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // OTP Template (one per user; none means the default message is sent)
+  getOtpTemplate: async (): Promise<
+    ApiResponse<{ template: OtpTemplate | null; defaultTemplate: OtpTemplateContent }>
+  > => {
+    return fetchJson<ApiResponse<{ template: OtpTemplate | null; defaultTemplate: OtpTemplateContent }>>(
+      '/otp-template',
+    );
+  },
+
+  saveOtpTemplate: async (payload: OtpTemplateContent): Promise<ApiResponse<OtpTemplate>> => {
+    return fetchJson<ApiResponse<OtpTemplate>>('/otp-template', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteOtpTemplate: async (): Promise<ApiResponse<{ deleted: boolean }>> => {
+    return fetchJson<ApiResponse<{ deleted: boolean }>>('/otp-template', {
       method: 'DELETE',
     });
   },

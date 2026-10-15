@@ -33,6 +33,20 @@ export interface SessionInfo {
   lastError?: string | null;
 }
 
+export interface OtpTemplateContent {
+  body: string;
+  footer: string | null;
+  showCopyButton: boolean;
+  copyButtonText: string;
+}
+
+export interface OtpTemplate extends OtpTemplateContent {
+  id: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MessageLog {
   id: string;
   sessionId: string;

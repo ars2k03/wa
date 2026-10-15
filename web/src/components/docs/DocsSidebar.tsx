@@ -41,6 +41,7 @@ const GROUPS: SidebarGroup[] = [
     links: [
       { id: 'errors', label: 'Error codes' },
       { id: 'message-preview', label: 'What users receive' },
+      { id: 'custom-template', label: 'Custom template' },
       { id: 'message-logs', label: 'Message logs' },
       { id: 'best-practices', label: 'Best practices' },
       { id: 'faq', label: 'FAQ' },

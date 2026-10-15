@@ -42,7 +42,7 @@ export function MessageLogsTab() {
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             placeholder="Search by recipient phone or message ID..."
-            className="w-full px-3 py-2 bg-[#fbf8f1] border-2 border-[#1a1a1a] font-mono text-xs text-[#1a1a1a] placeholder:text-[#524d43]/60 focus:outline-none shadow-[2px_2px_0px_#1a1a1a]"
+            className="w-full px-3 py-2 bg-[#ffffff] border-2 border-[#1a1a1a] font-mono text-xs text-[#1a1a1a] placeholder:text-[#524d43]/60 focus:outline-none shadow-[2px_2px_0px_#1a1a1a]"
           />
           {filterText && (
             <button

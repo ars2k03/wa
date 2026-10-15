@@ -33,7 +33,7 @@ export function Input({
       )}
       <input
         id={inputId}
-        className={`w-full px-3.5 py-2.5 bg-[#fbf8f1] border-2 border-[#1a1a1a] text-[#1a1a1a] placeholder-[#8c8270] focus:outline-none focus:bg-[#ffffff] focus:shadow-[2px_2px_0px_#1a1a1a] transition-all ${
+        className={`w-full px-3.5 py-2.5 bg-[#ffffff] border-2 border-[#1a1a1a] text-[#1a1a1a] placeholder-[#8c8270] focus:outline-none focus:shadow-[2px_2px_0px_#1a1a1a] transition-all ${
           isMono ? 'font-mono text-sm' : 'font-serif text-base'
         } ${error ? 'border-[#7a2020] bg-[#fff5f5]' : ''} ${className}`}
         {...props}
