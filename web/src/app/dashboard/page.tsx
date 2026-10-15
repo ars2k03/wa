@@ -10,6 +10,7 @@ import { ApiKeyManagerTab } from '@/components/dashboard/ApiKeyManagerTab';
 import { MessageTesterTab } from '@/components/dashboard/MessageTesterTab';
 import { MessageLogsTab } from '@/components/dashboard/MessageLogsTab';
 import { OtpTemplateTab } from '@/components/dashboard/OtpTemplateTab';
+import { UsageTab } from '@/components/dashboard/UsageTab';
 
 function DashboardContent() {
   const router = useRouter();
@@ -65,6 +66,11 @@ function DashboardContent() {
         return {
           title: 'Playground',
           desc: 'Send test messages and verify your WhatsApp connection in real time',
+        };
+      case 'usage':
+        return {
+          title: 'Usage',
+          desc: 'Track your daily and monthly OTP limits and recent sending activity',
         };
       case 'logs':
         return {
@@ -124,6 +130,8 @@ function DashboardContent() {
         )}
 
         {activeTab === 'logs' && <MessageLogsTab />}
+
+        {activeTab === 'usage' && <UsageTab />}
       </div>
     </div>
   );

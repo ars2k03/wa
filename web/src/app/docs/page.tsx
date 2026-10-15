@@ -258,13 +258,27 @@ export default function DocsPage() {
               title="Response"
               status={{ text: '429 TOO MANY REQUESTS', ok: false }}
               kind="json"
-              tabs={[ERROR_EXAMPLES.find((e) => e.id === '429')!]}
+              tabs={ERROR_EXAMPLES.filter((e) => e.id.startsWith('429'))}
             />
           }
         >
           <Prose>
-            Each IP address can make <strong>30 requests per minute</strong>. Extra requests get{' '}
-            <InlineCode>429 Too Many Requests</InlineCode>. Wait a minute, then try again.
+            Three limits apply. Going over any of them returns <InlineCode>429 Too Many Requests</InlineCode> and
+            nothing is sent.
+          </Prose>
+          <DocsTable
+            head={['LIMIT', 'COUNTS', 'RESETS']}
+            rows={[
+              ['30 requests / minute', 'Every request, per IP address', 'After a minute'],
+              ['100 OTPs / day', 'Successful OTPs on your account, across all API keys', '12:00 AM, Bangladesh time'],
+              ['3000 OTPs / month', 'Successful OTPs on your account, across all API keys', 'The 1st of each month, 12:00 AM'],
+            ]}
+          />
+          <Prose>
+            Failed sends, such as a number that is not on WhatsApp, do not count toward the daily or monthly limit.
+            When one is used up, the response says which one and when it resets (<InlineCode>limit</InlineCode> and{' '}
+            <InlineCode>resetsAt</InlineCode>). Your dashboard shows how much you have used under{' '}
+            <strong>Usage</strong>.
           </Prose>
           <Callout tone="warn" title="PROTECT YOUR OWN ENDPOINT TOO">
             Limit how often one user can ask for a code in your app (for example, once every 60 seconds). Otherwise
@@ -487,6 +501,7 @@ export default function DocsPage() {
               ['400', 'Number is not registered on WhatsApp', 'Ask the user for a WhatsApp number.'],
               ['401', 'API key missing, invalid or revoked', 'Check the header and that the key still exists.'],
               ['429', 'More than 30 requests in a minute', 'Wait a minute, then retry.'],
+              ['429', 'Daily (100) or monthly (3000) OTP limit used up', 'Wait until resetsAt; see Dashboard → Usage.'],
               ['503', 'Your WhatsApp is not connected', 'Dashboard → WhatsApp Device → scan the QR again.'],
             ]}
           />

@@ -20,7 +20,7 @@ interface ErrorDetails {
   icon: string;
   title: string;
   message: string;
-  actionType?: 'device' | 'keys';
+  actionType?: 'device' | 'keys' | 'usage';
   raw?: any;
 }
 
@@ -128,7 +128,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
       let message = rawMsg;
       let icon = '⚠️';
       let statusText = `${status} ERROR`;
-      let actionType: 'device' | 'keys' | undefined = undefined;
+      let actionType: 'device' | 'keys' | 'usage' | undefined = undefined;
 
       if (
         status === 503 ||
@@ -162,6 +162,13 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
         statusText = '400 BAD REQUEST';
         message =
           'The recipient phone number is not registered on WhatsApp or the format is invalid. Please verify the number.';
+      } else if (status === 429 && (rawData?.limit === 'daily' || rawData?.limit === 'monthly')) {
+        // Account quota (100/day, 3000/month); the server message says when it resets
+        icon = '📊';
+        title = rawData.limit === 'daily' ? 'Daily Limit Reached' : 'Monthly Limit Reached';
+        statusText = '429 LIMIT REACHED';
+        message = rawMsg;
+        actionType = 'usage';
       } else if (status === 429) {
         icon = '⏳';
         title = 'Rate Limit Exceeded';
@@ -356,6 +363,18 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                         className="text-xs py-1.5"
                       >
                         CONNECT DEVICE NOW →
+                      </Button>
+                    )}
+
+                    {errorDetails.actionType === 'usage' && (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setActiveTab('usage')}
+                        className="text-xs py-1.5"
+                      >
+                        VIEW USAGE →
                       </Button>
                     )}
 

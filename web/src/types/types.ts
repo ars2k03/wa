@@ -58,6 +58,21 @@ export interface MessageLog {
   createdAt: string;
 }
 
+export interface UsageWindow {
+  used: number;
+  limit: number;
+  /** ISO time when this counter goes back to 0 */
+  resetsAt: string;
+}
+
+export interface UsageSummary {
+  timezone: string;
+  daily: UsageWindow;
+  monthly: UsageWindow;
+  /** Successful OTPs per day (Bangladesh time), oldest first */
+  history: { date: string; count: number }[];
+}
+
 export interface ApiResponse<T = any> {
   statusCode: number;
   success: boolean;

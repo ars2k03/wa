@@ -7,6 +7,7 @@ import type {
   SendOtpPayload,
   SendOtpResult,
   SessionInfo,
+  UsageSummary,
   User,
 } from '../types/types';
 
@@ -204,6 +205,11 @@ export const api = {
       },
       body: JSON.stringify(payload),
     });
+  },
+
+  // Usage (daily and monthly OTP limits)
+  getUsage: async (): Promise<ApiResponse<UsageSummary>> => {
+    return fetchJson<ApiResponse<UsageSummary>>('/usage');
   },
 
   // Message Logs

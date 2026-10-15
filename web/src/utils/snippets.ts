@@ -432,7 +432,7 @@ switch (response.status) {
     // Bad number or not on WhatsApp: ask the user to check their number.
     throw new UserInputError(message);
   case 429:
-    // Too many requests: wait a minute before trying again.
+    // Too many requests, or your daily/monthly limit is used up: try again later.
     throw new RetryLaterError(message);
   case 401:
   case 503:
@@ -467,7 +467,7 @@ if response.status_code == 400:
     # Bad number or not on WhatsApp: ask the user to check their number.
     raise UserInputError(message)
 elif response.status_code == 429:
-    # Too many requests: wait a minute before trying again.
+    # Too many requests, or your daily/monthly limit is used up: try again later.
     raise RetryLaterError(message)
 elif response.status_code in (401, 503):
     # Wrong key, or your WhatsApp is disconnected: alert your team.
@@ -508,7 +508,7 @@ switch ($status) {
         // Bad number or not on WhatsApp: ask the user to check their number.
         throw new UserInputException($message);
     case 429:
-        // Too many requests: wait a minute before trying again.
+        // Too many requests, or your daily/monthly limit is used up: try again later.
         throw new RetryLaterException($message);
     case 401:
     case 503:
@@ -547,7 +547,7 @@ case http.StatusBadRequest:
 	// Bad number or not on WhatsApp: ask the user to check their number.
 	return "", &UserInputError{Message: message}
 case http.StatusTooManyRequests:
-	// Too many requests: wait a minute before trying again.
+	// Too many requests, or your daily/monthly limit is used up: try again later.
 	return "", ErrRetryLater
 case http.StatusUnauthorized, http.StatusServiceUnavailable:
 	// Wrong key, or your WhatsApp is disconnected: alert your team.
@@ -601,10 +601,32 @@ export const ERROR_EXAMPLES: CodeTab[] = [
   },
   {
     id: '429',
-    label: '429',
+    label: '429 · Per minute',
     code: json({
       statusCode: 429,
       message: 'ThrottlerException: Too Many Requests',
+    }),
+  },
+  {
+    id: '429-daily',
+    label: '429 · Daily limit',
+    code: json({
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: 'Daily limit of 100 OTPs reached. Resets at 12:00 AM.',
+      limit: 'daily',
+      resetsAt: '2026-10-15T18:00:00.000Z',
+    }),
+  },
+  {
+    id: '429-monthly',
+    label: '429 · Monthly limit',
+    code: json({
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: 'Monthly limit of 3000 OTPs reached. Resets on Nov 1.',
+      limit: 'monthly',
+      resetsAt: '2026-10-31T18:00:00.000Z',
     }),
   },
   {
