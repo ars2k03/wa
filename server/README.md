@@ -18,6 +18,8 @@ Built with **NestJS 12**, **Baileys (WebSockets)**, **Prisma ORM**, **PostgreSQL
 * **Redis Multi-Tenant Auth State**: Saves cryptographic keys, credentials, and pairing state in Redis with zero file-system lock contention.
 * **Prisma & PostgreSQL**: Stores persistent users, hashed passwords, developer API keys, WhatsApp session records, and audit logs.
 * **Email Verification**: Dispatches 6-digit verification codes using the official Gmail REST API via OAuth2.
+* **Custom OTP Templates**: Each user can set their own WhatsApp OTP message (body with `{{code}}`, footer, optional one-tap copy button) or fall back to the default.
+* **Usage Limits**: Per-user quota of 100 OTPs/day and 3,000 OTPs/month (Bangladesh time), counted atomically in PostgreSQL. Only successful sends count; a full limit returns `429` with `limit` and `resetsAt`.
 * **Security & Protection**:
   * Helmet security headers
   * ThrottlerGuard rate limiting (30 requests/minute)
@@ -62,7 +64,7 @@ npm install
 npm run prisma:generate
 npm run prisma:migrate
 
-# 3. Start development server with file watch
+# 3. Start development server with file watch (also runs prisma generate)
 npm run start:dev
 
 # 4. Production build & start

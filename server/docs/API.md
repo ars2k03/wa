@@ -2,7 +2,7 @@
 
 Comprehensive REST API documentation for the **WhatsApp OTP Gateway** backend service.
 
-> 🚀 **Postman Collection**: A ready-to-use Postman collection is available at [`postman_collection.json`](./postman_collection.json). Simply import this file into Postman to instantly test all 14 endpoints with automatic JWT token and API key handling.
+> 🚀 **Postman Collection**: A ready-to-use Postman collection is available at [`postman_collection.json`](./postman_collection.json). Simply import this file into Postman to instantly test all 18 endpoints with automatic JWT token and API key handling.
 
 ---
 
@@ -19,6 +19,8 @@ Comprehensive REST API documentation for the **WhatsApp OTP Gateway** backend se
   - [4. API Key Management](#4-api-key-management)
   - [5. WhatsApp Device Sessions](#5-whatsapp-device-sessions)
   - [6. WhatsApp Dispatch & Logs](#6-whatsapp-dispatch--logs)
+  - [7. OTP Message Template](#7-otp-message-template)
+  - [8. Usage & Limits](#8-usage--limits)
 - [End-to-End Workflow Example](#end-to-end-workflow-example)
 
 ---
@@ -58,6 +60,7 @@ Used for dispatching WhatsApp messages from third-party applications, microservi
 ## Rate Limiting & Security
 
 * **Global Rate Limit:** 30 requests per minute (`ttl: 60s`, `limit: 30`) enforced by NestJS Throttler.
+* **OTP Usage Limits:** Each user can send **100 OTPs per day** and **3,000 OTPs per month** through `POST /send-otp`, counted across all of their API keys. Only successful sends count. Days and months are counted in Bangladesh time (`Asia/Dhaka`, UTC+6). See [8. Usage & Limits](#8-usage--limits).
 * **Security Headers:** Powered by Helmet.
 * **CORS:** Configurable via `ALLOWED_ORIGINS` (defaults to local origins and server-to-server calls).
 
@@ -84,6 +87,22 @@ Used for dispatching WhatsApp messages from third-party applications, microservi
 }
 ```
 
+### OTP Limit Reached (HTTP 429)
+When a daily or monthly OTP limit is full, `POST /send-otp` returns `429` with which limit was hit and when it resets:
+```json
+{
+  "statusCode": 429,
+  "error": "Too Many Requests",
+  "message": "Daily limit of 100 OTPs reached. Resets at 12:00 AM.",
+  "limit": "daily",
+  "resetsAt": "2026-10-15T18:00:00.000Z"
+}
+```
+* `limit` (`"daily"` | `"monthly"`): The limit that was reached.
+* `resetsAt` (ISO 8601): When that limit resets (midnight Bangladesh time, or the 1st of next month).
+
+A `429` **without** `limit` / `resetsAt` comes from the global rate limit (30 requests/minute).
+
 ---
 
 ## API Quick Reference Table
@@ -104,6 +123,10 @@ Used for dispatching WhatsApp messages from third-party applications, microservi
 | 12 | `DELETE`| `/sessions/:sessionId` | JWT | Disconnect & remove WhatsApp session |
 | 13 | `POST` | `/send-otp` | API Key | Send WhatsApp OTP / text to phone number |
 | 14 | `GET` | `/message-logs` | JWT | Retrieve dispatched message history & logs |
+| 15 | `GET` | `/otp-template` | JWT | Get your OTP message template and the default one |
+| 16 | `PUT` | `/otp-template` | JWT | Create or replace your OTP message template |
+| 17 | `DELETE`| `/otp-template` | JWT | Reset your OTP message template to the default |
+| 18 | `GET` | `/usage` | JWT | Get daily/monthly OTP usage, limits & 30-day history |
 
 ---
 
@@ -456,7 +479,7 @@ Disconnects the WhatsApp socket, removes authentication credentials from Redis/s
 ### 6. WhatsApp Dispatch & Logs
 
 #### `POST /send-otp`
-Dispatches an interactive OTP verification message containing a one-tap copy button to the target WhatsApp number.
+Sends an OTP message to the target WhatsApp number, formatted with your [OTP message template](#7-otp-message-template) (or the default template if you haven't set one). With the template's copy button turned on, the message includes a one-tap "Copy Code" button.
 
 * **Auth:** `ApiKeyGuard` (via `x-api-key` header or `Authorization: Bearer <api_key>`)
 * **Headers:**
@@ -475,6 +498,8 @@ Dispatches an interactive OTP verification message containing a one-tap copy but
   * `otp` (string, required): The OTP code to display and embed in the copy button.
 
   The message is always sent from the API key owner's connected WhatsApp device. If no device is connected, the API returns `503 Service Unavailable`.
+
+  Each successful send counts toward your daily (100) and monthly (3,000) OTP limits. When a limit is full, the API returns [`429` with `limit` and `resetsAt`](#otp-limit-reached-http-429). A failed send does not count.
 
 **Example Response (200 OK):**
 ```json
@@ -519,6 +544,166 @@ Fetches the last 100 message audit logs associated with the authenticated user's
   ]
 }
 ```
+
+---
+
+### 7. OTP Message Template
+
+Each user can customize the WhatsApp message sent by `POST /send-otp`. Without a custom template, the default one is used.
+
+**Default template:**
+```json
+{
+  "body": "*{{code}}* is your verification code.\n\nFor your security, do not share this code.",
+  "footer": "This code expires in 5 minutes",
+  "showCopyButton": true,
+  "copyButtonText": "Copy Code"
+}
+```
+
+**Template rules:**
+* `body` must contain `{{code}}` (spaces allowed: `{{ code }}`). It is replaced with the OTP. No other `{{placeholder}}` is allowed.
+* `footer` cannot contain placeholders.
+* Length limits (from WhatsApp): `body` 1024, `footer` 60, `copyButtonText` 20 characters.
+* WhatsApp formatting like `*bold*` and `_italic_` works in `body`.
+
+---
+
+#### `GET /otp-template`
+Returns your custom template (or `null` if you use the default) together with the default template.
+
+* **Auth:** `Bearer <token>`
+
+**Example Response (200 OK):**
+```json
+{
+  "statusCode": 200,
+  "success": true,
+  "data": {
+    "template": {
+      "id": "6f1c2d3e-...",
+      "userId": "a1b2c3d4-...",
+      "body": "Your *Acme* login code is {{code}}",
+      "footer": "Valid for 5 minutes",
+      "showCopyButton": true,
+      "copyButtonText": "Copy Code",
+      "createdAt": "2026-10-14T06:15:20.000Z",
+      "updatedAt": "2026-10-14T06:15:20.000Z"
+    },
+    "defaultTemplate": {
+      "body": "*{{code}}* is your verification code.\n\nFor your security, do not share this code.",
+      "footer": "This code expires in 5 minutes",
+      "showCopyButton": true,
+      "copyButtonText": "Copy Code"
+    }
+  }
+}
+```
+
+---
+
+#### `PUT /otp-template`
+Creates or replaces your OTP message template (one per user).
+
+* **Auth:** `Bearer <token>`
+* **Request Body:**
+  ```json
+  {
+    "body": "Your *Acme* login code is {{code}}",
+    "footer": "Valid for 5 minutes",
+    "showCopyButton": true,
+    "copyButtonText": "Copy Code"
+  }
+  ```
+  * `body` (string, required): Message text. Must include `{{code}}`. Max 1024 characters.
+  * `footer` (string, optional): Small grey text under the message. Max 60 characters. Empty means no footer.
+  * `showCopyButton` (boolean, required): Whether to add the one-tap copy button.
+  * `copyButtonText` (string, optional): Button label. Max 20 characters. Defaults to `"Copy Code"`.
+
+**Example Response (200 OK):**
+```json
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "OTP template saved successfully",
+  "data": {
+    "id": "6f1c2d3e-...",
+    "userId": "a1b2c3d4-...",
+    "body": "Your *Acme* login code is {{code}}",
+    "footer": "Valid for 5 minutes",
+    "showCopyButton": true,
+    "copyButtonText": "Copy Code",
+    "createdAt": "2026-10-14T06:15:20.000Z",
+    "updatedAt": "2026-10-14T06:15:20.000Z"
+  }
+}
+```
+
+**Error Example (400 Bad Request):**
+```json
+{
+  "statusCode": 400,
+  "message": "The message must include {{code}} where the OTP should appear",
+  "error": "Bad Request"
+}
+```
+
+---
+
+#### `DELETE /otp-template`
+Deletes your custom template, so the default message is sent again.
+
+* **Auth:** `Bearer <token>`
+
+**Example Response (200 OK):**
+```json
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "OTP template reset to default",
+  "data": {
+    "deleted": true
+  }
+}
+```
+* `deleted` is `false` if you were already using the default template.
+
+---
+
+### 8. Usage & Limits
+
+#### `GET /usage`
+Returns how many OTPs you have sent today and this month, your limits, when they reset, and a day-by-day history of the last 30 days.
+
+* **Auth:** `Bearer <token>`
+
+**Example Response (200 OK):**
+```json
+{
+  "statusCode": 200,
+  "success": true,
+  "data": {
+    "timezone": "Asia/Dhaka",
+    "daily": {
+      "used": 12,
+      "limit": 100,
+      "resetsAt": "2026-10-15T18:00:00.000Z"
+    },
+    "monthly": {
+      "used": 240,
+      "limit": 3000,
+      "resetsAt": "2026-10-31T18:00:00.000Z"
+    },
+    "history": [
+      { "date": "2026-09-16", "count": 0 },
+      { "date": "2026-10-15", "count": 12 }
+    ]
+  }
+}
+```
+* `daily` / `monthly`: Successful sends in the current Bangladesh-time day / month.
+* `resetsAt` (ISO 8601): Next reset (midnight Bangladesh time, or the 1st of next month).
+* `history`: One entry per day for the last 30 days, oldest first (shortened above).
 
 ---
 

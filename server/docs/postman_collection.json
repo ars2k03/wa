@@ -48,8 +48,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/",
-              "host": ["{{baseUrl}}"],
-              "path": [""]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
             },
             "description": "Public health check endpoint returning server status and default WhatsApp session status."
           },
@@ -76,8 +80,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "description": "Creates an unverified user account and dispatches a 6-digit email OTP via Gmail API."
           },
@@ -119,8 +128,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "description": "Authenticates user and automatically stores the JWT token in collection variables for subsequent requests."
           },
@@ -139,8 +153,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
             },
             "description": "Fetches current authenticated operator user profile."
           },
@@ -167,8 +186,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/otp/send",
-              "host": ["{{baseUrl}}"],
-              "path": ["otp", "send"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "otp",
+                "send"
+              ]
             },
             "description": "Sends a fresh 6-digit OTP code to the given email address using Gmail API."
           },
@@ -190,8 +214,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/otp/verify",
-              "host": ["{{baseUrl}}"],
-              "path": ["otp", "verify"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "otp",
+                "verify"
+              ]
             },
             "description": "Validates 6-digit email verification code and activates user account."
           },
@@ -243,8 +272,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api-keys",
-              "host": ["{{baseUrl}}"],
-              "path": ["api-keys"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api-keys"
+              ]
             },
             "description": "Generates a new prefixed API Key (_ars_2k03_...) and automatically saves it to collection variables."
           },
@@ -263,8 +296,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api-keys/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api-keys", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api-keys",
+                "{{userId}}"
+              ]
             },
             "description": "Lists all API Keys created by the authenticated user."
           },
@@ -283,8 +321,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api-keys/{{keyId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api-keys", "{{keyId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api-keys",
+                "{{keyId}}"
+              ]
             },
             "description": "Revokes and deletes an API key by keyId."
           },
@@ -316,8 +359,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/sessions/{{sessionId}}/init",
-              "host": ["{{baseUrl}}"],
-              "path": ["sessions", "{{sessionId}}", "init"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{sessionId}}",
+                "init"
+              ]
             },
             "description": "Initializes Baileys socket for sessionId and returns Base64 QR code for phone pairing."
           },
@@ -336,8 +385,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/sessions/{{sessionId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["sessions", "{{sessionId}}", "status"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{sessionId}}",
+                "status"
+              ]
             },
             "description": "Checks whether the session is qr_ready, connecting, connected, or disconnected."
           },
@@ -356,8 +411,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/sessions/{{sessionId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["sessions", "{{sessionId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                "{{sessionId}}"
+              ]
             },
             "description": "Closes socket, clears Redis auth credentials, and deletes session."
           },
@@ -385,14 +445,18 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"phoneNumber\": \"01700000000\",\n  \"otp\": \"592104\",\n  \"sessionId\": \"{{sessionId}}\"\n}"
+              "raw": "{\n  \"phoneNumber\": \"01700000000\",\n  \"otp\": \"592104\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/send-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["send-otp"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "send-otp"
+              ]
             },
-            "description": "Dispatches WhatsApp OTP message containing interactive copy-code button via authenticated API key."
+            "description": "Sends a WhatsApp OTP from the API key owner's connected device, formatted with their OTP template. Counts toward the daily (100) and monthly (3,000) OTP limits; returns 429 with `limit` and `resetsAt` when a limit is full."
           },
           "response": []
         },
@@ -409,10 +473,128 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/message-logs",
-              "host": ["{{baseUrl}}"],
-              "path": ["message-logs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "message-logs"
+              ]
             },
             "description": "Retrieves last 100 message delivery audit logs for current user's keys and sessions."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. OTP Message Template",
+      "item": [
+        {
+          "name": "Get OTP Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/otp-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "otp-template"
+              ]
+            },
+            "description": "Returns your custom OTP template (null if using the default) and the default template."
+          },
+          "response": []
+        },
+        {
+          "name": "Save OTP Template",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Your *Acme* login code is {{code}}\",\n  \"footer\": \"Valid for 5 minutes\",\n  \"showCopyButton\": true,\n  \"copyButtonText\": \"Copy Code\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/otp-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "otp-template"
+              ]
+            },
+            "description": "Creates or replaces your OTP template. `body` must contain {{code}}. Limits: body 1024, footer 60, copyButtonText 20 characters."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset OTP Template",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/otp-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "otp-template"
+              ]
+            },
+            "description": "Deletes your custom template so the default message is sent again."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Usage & Limits",
+      "item": [
+        {
+          "name": "Get Usage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usage"
+              ]
+            },
+            "description": "Returns today's and this month's OTP usage, limits, reset times (Asia/Dhaka) and a 30-day history."
           },
           "response": []
         }
