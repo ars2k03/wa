@@ -70,7 +70,7 @@ export default function DocsPage() {
   return (
     <main className="min-w-0 px-4 sm:px-8 lg:px-12 pt-10 pb-24">
       {/* ================================================================ Introduction */}
-      <section id="introduction" className="scroll-mt-24 pb-12 mb-12 border-b-2 border-dashed border-[#d6cdb8]">
+      <section id="introduction" className="scroll-mt-32 lg:scroll-mt-24 pb-12 mb-12 border-b-2 border-dashed border-[#d6cdb8]">
         <Split
           aside={
             <>

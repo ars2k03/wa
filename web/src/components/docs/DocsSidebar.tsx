@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Drawer } from '@/components/ui/Drawer';
 
 interface SidebarGroup {
   title: string;
@@ -71,44 +72,100 @@ export function DocsSidebar({ groups = GROUPS }: { groups?: SidebarGroup[] }) {
     return () => observer.disconnect();
   }, [groups]);
 
-  return (
-    <aside className="bg-[#fbf8f1] border-b-2 border-[#1a1a1a] lg:fixed lg:top-16 lg:bottom-0 lg:left-0 lg:z-40 lg:w-[var(--docs-sidebar-w)] lg:overflow-y-auto lg:overscroll-contain lg:border-b-0 lg:border-r-2">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="lg:hidden w-full text-left font-mono text-xs font-extrabold px-4 py-3 bg-[#f4efe2] cursor-pointer"
-      >
-        {open ? '✕ Close menu' : '☰ Documentation menu'}
-      </button>
+  const activeLabel = groups.flatMap((g) => g.links).find((l) => l.id === activeId)?.label;
 
-      <nav className={`${open ? 'block' : 'hidden'} lg:block px-4 py-7`}>
-        {groups.map((group) => (
-          <div key={group.title} className="mb-5 last:mb-0">
-            <div className="font-mono text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#7a2020] mb-2">
-              {group.title}
-            </div>
-            {group.links.map((link) => (
-              <a
-                key={link.id}
-                href={`#${link.id}`}
-                onClick={() => setOpen(false)}
-                className={`flex items-center font-mono text-[13px] px-2.5 py-1.5 border-l-2 ${
-                  activeId === link.id
-                    ? 'border-[#7a2020] bg-[#f4efe2] text-[#1a1a1a] font-extrabold'
-                    : 'border-transparent text-[#524d43] font-semibold hover:bg-[#f4efe2] hover:text-[#1a1a1a]'
-                }`}
-              >
-                {link.method && (
-                  <span className="font-mono text-[9px] font-extrabold bg-[#2e6930] text-[#fbf8f1] px-1 mr-1.5">
-                    {link.method}
-                  </span>
-                )}
-                {link.label}
-              </a>
-            ))}
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    if (!open) return;
+    // In the drawer: close it first, then scroll once page scrolling is unlocked.
+    e.preventDefault();
+    setOpen(false);
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', `#${id}`);
+    }, 0);
+  };
+
+  const links = (
+    <nav className="px-4 py-7">
+      {groups.map((group) => (
+        <div key={group.title} className="mb-5 last:mb-0">
+          <div className="font-mono text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#7a2020] mb-2">
+            {group.title}
           </div>
-        ))}
-      </nav>
-    </aside>
+          {group.links.map((link) => (
+            <a
+              key={link.id}
+              href={`#${link.id}`}
+              onClick={(e) => handleLinkClick(e, link.id)}
+              aria-current={activeId === link.id ? 'location' : undefined}
+              className={`flex items-center font-mono text-[13px] px-2.5 py-2 lg:py-1.5 border-l-2 ${
+                activeId === link.id
+                  ? 'border-[#7a2020] bg-[#f4efe2] text-[#1a1a1a] font-extrabold'
+                  : 'border-transparent text-[#524d43] font-semibold hover:bg-[#f4efe2] hover:text-[#1a1a1a]'
+              }`}
+            >
+              {link.method && (
+                <span className="font-mono text-[9px] font-extrabold bg-[#2e6930] text-[#fbf8f1] px-1 mr-1.5">
+                  {link.method}
+                </span>
+              )}
+              {link.label}
+            </a>
+          ))}
+        </div>
+      ))}
+    </nav>
+  );
+
+  return (
+    <>
+      {/* Small screens: sticky bar showing where you are; tapping it opens the drawer. */}
+      <div className="lg:hidden sticky top-16 z-40 bg-[#f4efe2] border-b-2 border-[#1a1a1a]">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-expanded={open}
+          aria-controls="docs-menu"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer"
+        >
+          <span className="w-7 h-7 shrink-0 flex items-center justify-center border-2 border-[#1a1a1a] bg-[#fbf8f1] shadow-[2px_2px_0px_#1a1a1a]">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-mono text-[9px] font-extrabold uppercase tracking-[0.12em] text-[#7a2020]">
+              On this page
+            </span>
+            <span className="block truncate font-mono text-xs font-extrabold text-[#1a1a1a]">
+              {activeLabel ?? 'Documentation'}
+            </span>
+          </span>
+          <span className="font-mono text-[10px] font-bold uppercase text-[#524d43]">Menu</span>
+        </button>
+      </div>
+
+      <Drawer
+        id="docs-menu"
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        side="left"
+        label="Documentation menu"
+        closeAtWidth={1024}
+        header={
+          <span className="flex items-center gap-2">
+            <span className="font-serif font-black text-xl text-[#1a1a1a] tracking-tight">Docs</span>
+            <span className="font-mono text-[10px] font-bold uppercase text-[#524d43]">contents</span>
+          </span>
+        }
+      >
+        {links}
+      </Drawer>
+
+      {/* Large screens: fixed sidebar. */}
+      <aside className="hidden lg:block fixed top-16 bottom-0 left-0 z-40 w-[var(--docs-sidebar-w)] overflow-y-auto overscroll-contain bg-[#fbf8f1] border-r-2 border-[#1a1a1a]">
+        {links}
+      </aside>
+    </>
   );
 }

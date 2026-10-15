@@ -3,13 +3,13 @@
 import React from 'react';
 import { useDashboardTab, type DashboardTab } from '@/context/DashboardTabContext';
 
-interface SidebarItem {
+export interface SidebarItem {
   id: DashboardTab;
   title: string;
   icon: React.ReactNode;
 }
 
-const ITEMS: SidebarItem[] = [
+export const DASHBOARD_NAV_ITEMS: SidebarItem[] = [
   {
     id: 'device',
     title: 'WhatsApp Device',
@@ -106,18 +106,18 @@ export function DashboardSidebar() {
   const { activeTab, setActiveTab } = useDashboardTab();
 
   return (
-    <aside className="w-full md:w-64 shrink-0 bg-[#f4efe2] border-b-2 md:border-b-0 md:border-r-2 border-[#1a1a1a] flex flex-col justify-between h-full overflow-hidden select-none">
+    <aside className="hidden md:flex w-64 shrink-0 bg-[#f4efe2] border-r-2 border-[#1a1a1a] flex-col justify-between h-full overflow-hidden select-none">
       {/* Top Navigation Items */}
       <div className="p-4 space-y-4">
-        <div className="hidden md:block border-b-2 border-[#1a1a1a] pb-2">
+        <div className="border-b-2 border-[#1a1a1a] pb-2">
           <span className="font-mono text-[10px] font-black uppercase text-[#7a2020] tracking-widest">
             NAVIGATION DESK
           </span>
         </div>
 
         {/* Menu Buttons */}
-        <nav className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
-          {ITEMS.map((item) => {
+        <nav className="flex flex-col gap-2">
+          {DASHBOARD_NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
@@ -132,7 +132,7 @@ export function DashboardSidebar() {
                 <span className={isActive ? 'text-[#7a2020]' : 'text-[#524d43]'}>
                   {item.icon}
                 </span>
-                <span className="font-serif font-bold text-xs sm:text-sm tracking-tight">
+                <span className="font-serif font-bold text-sm tracking-tight">
                   {item.title}
                 </span>
               </button>
@@ -142,7 +142,7 @@ export function DashboardSidebar() {
       </div>
 
       {/* Bottom Sticky Status Info */}
-      <div className="hidden md:block p-4 border-t-2 border-[#1a1a1a] bg-[#ede5d3] space-y-2 text-xs font-mono">
+      <div className="p-4 border-t-2 border-[#1a1a1a] bg-[#ede5d3] space-y-2 text-xs font-mono">
         <div className="flex items-center justify-between text-[#524d43]">
           <span>GATEWAY:</span>
           <span className="font-bold text-[#1a1a1a]">ONLINE</span>

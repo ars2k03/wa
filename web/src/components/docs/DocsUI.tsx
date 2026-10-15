@@ -33,7 +33,7 @@ export function DocsSection({
   return (
     <section
       id={id}
-      className="scroll-mt-24 pb-12 mb-12 border-b-2 border-dashed border-[#d6cdb8] last:border-b-0 last:mb-0"
+      className="scroll-mt-32 lg:scroll-mt-24 pb-12 mb-12 border-b-2 border-dashed border-[#d6cdb8] last:border-b-0 last:mb-0"
     >
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
       <h2 className="font-serif text-[28px] font-black text-[#1a1a1a] mt-1.5 mb-3">{title}</h2>

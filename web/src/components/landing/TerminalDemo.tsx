@@ -143,16 +143,16 @@ export function TerminalDemo({ apiUrl }: { apiUrl: string }) {
   return (
     <div className="border-2 border-[#1a1a1a] shadow-[6px_6px_0px_#1a1a1a] bg-[#1a1a1a]">
       {/* Terminal Header */}
-      <div className="border-b-2 border-[#333333] text-[#fbf8f1] px-4 py-2.5 flex items-center justify-between">
+      <div className="border-b-2 border-[#333333] text-[#fbf8f1] px-4 py-2.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#eab308]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-          <span className="font-mono text-xs font-bold tracking-wider ml-1 text-[#d4d4d4]">
-            cURL Request Preview
+          <span className="font-mono text-xs font-bold tracking-wider ml-1 text-[#d4d4d4] whitespace-nowrap">
+            cURL <span className="hidden sm:inline">Request </span>Preview
           </span>
         </div>
-        <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#22c55e]">
+        <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#22c55e] whitespace-nowrap shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
           POST /send-otp
         </span>
@@ -162,7 +162,7 @@ export function TerminalDemo({ apiUrl }: { apiUrl: string }) {
       <div
         ref={bodyRef}
         aria-label="Animated example of sending an OTP with curl"
-        className="h-[460px] overflow-y-auto overflow-x-hidden p-4 font-mono text-xs leading-relaxed text-[#fbf8f1] [scrollbar-width:none]"
+        className="h-[340px] sm:h-[460px] overflow-y-auto overflow-x-hidden p-4 font-mono text-xs leading-relaxed text-[#fbf8f1] [scrollbar-width:none]"
       >
         <div className="whitespace-pre-wrap break-all">
           {prompt}

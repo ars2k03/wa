@@ -8,12 +8,17 @@ import { api } from '@/lib/api';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
+import { Drawer, MenuButton } from '../ui/Drawer';
+import { useDashboardTab } from '@/context/DashboardTabContext';
+import { DASHBOARD_NAV_ITEMS } from './DashboardSidebar';
 
 export function DashboardNavbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [gatewayOnline, setGatewayOnline] = useState<boolean | null>(null);
   const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { activeTab, setActiveTab } = useDashboardTab();
 
   useEffect(() => {
     api
@@ -41,7 +46,13 @@ export function DashboardNavbar() {
     <header className="sticky top-0 z-50 w-full bg-[#fbf8f1] border-b-2 border-[#1a1a1a] h-16 shrink-0">
       <div className="w-full px-4 sm:px-6 h-full flex items-center justify-between gap-4">
         {/* Brand & Console Badge (Left) */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <MenuButton
+            onClick={() => setIsMenuOpen(true)}
+            isOpen={isMenuOpen}
+            controls="dashboard-menu"
+            className="md:hidden"
+          />
           <Link
             href="/"
             title="Go to Home"
@@ -98,16 +109,101 @@ export function DashboardNavbar() {
             </Link>
           )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSignoutModalOpen(true)}
-            className="text-xs py-1.5 px-3 hover:bg-[#fae8e8] hover:text-[#7a2020] transition-colors"
-          >
-            Sign Out
-          </Button>
+          <span className="hidden md:block">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSignoutModalOpen(true)}
+              className="text-xs py-1.5 px-3 hover:bg-[#fae8e8] hover:text-[#7a2020] transition-colors"
+            >
+              Sign Out
+            </Button>
+          </span>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer (replaces the sidebar below md) */}
+      <Drawer
+        id="dashboard-menu"
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        side="left"
+        label="Dashboard menu"
+        closeAtWidth={768}
+        header={
+          <span className="flex items-center gap-2">
+            <span className="font-serif font-black text-xl text-[#1a1a1a] tracking-tight">WA Gateway</span>
+            <Badge variant="ink" className="text-[9px]">CONSOLE</Badge>
+          </span>
+        }
+        footer={
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/" onClick={() => setIsMenuOpen(false)} className="block">
+              <Button variant="outline" size="sm" className="w-full text-xs py-2.5">
+                ← Home
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsMenuOpen(false);
+                setIsSignoutModalOpen(true);
+              }}
+              className="w-full text-xs py-2.5 hover:bg-[#fae8e8] hover:text-[#7a2020]"
+            >
+              Sign Out
+            </Button>
+          </div>
+        }
+      >
+        <div className="p-4 space-y-4">
+          {user && (
+            <div className="flex items-center gap-3 p-3 bg-[#ede5d3] border-2 border-[#1a1a1a] min-w-0">
+              <span className="w-9 h-9 shrink-0 flex items-center justify-center bg-[#1a1a1a] text-[#fbf8f1] font-serif font-black">
+                {(user.name || user.email || '?').charAt(0).toUpperCase()}
+              </span>
+              <span className="min-w-0">
+                <span className="block font-serif font-bold text-sm text-[#1a1a1a] truncate">
+                  {user.name || 'Operator'}
+                </span>
+                <span className="block font-mono text-[11px] text-[#524d43] truncate">{user.email}</span>
+              </span>
+            </div>
+          )}
+
+          <div className="border-b-2 border-[#1a1a1a] pb-2">
+            <span className="font-mono text-[10px] font-black uppercase text-[#7a2020] tracking-widest">
+              NAVIGATION DESK
+            </span>
+          </div>
+
+          <nav className="flex flex-col gap-2">
+            {DASHBOARD_NAV_ITEMS.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setIsMenuOpen(false);
+                  }}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center gap-3 p-3 text-left transition-all cursor-pointer select-none border-2 ${
+                    isActive
+                      ? 'bg-[#fbf8f1] text-[#1a1a1a] border-[#1a1a1a] shadow-[3px_3px_0px_#7a2020]'
+                      : 'bg-transparent text-[#524d43] border-transparent hover:bg-[#ede5d3] hover:text-[#1a1a1a] hover:border-[#1a1a1a]'
+                  }`}
+                >
+                  <span className={isActive ? 'text-[#7a2020]' : 'text-[#524d43]'}>{item.icon}</span>
+                  <span className="font-serif font-bold text-[15px] tracking-tight">{item.title}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </Drawer>
 
       {/* Sign Out Confirmation Modal */}
       <Modal
