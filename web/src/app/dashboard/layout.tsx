@@ -17,7 +17,9 @@ export default function DashboardLayout({
         {/* Workstation Body: Fixed Stable Sidebar + Independent Scrollable Middle Area */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
           <DashboardSidebar />
-          <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {/* relative: absolutely positioned children (e.g. sr-only tables) stay inside this scroll area
+              instead of stretching the page and making the sidebar scroll with it */}
+          <main className="relative flex-1 min-w-0 h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
             {children}
           </main>
         </div>

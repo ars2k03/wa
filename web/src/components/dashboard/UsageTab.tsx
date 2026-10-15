@@ -81,7 +81,7 @@ function HistoryChart({ usage }: { usage: UsageSummary }) {
   const active = hovered ?? lastIndex;
 
   return (
-    <div className="border-3 border-[#1a1a1a] bg-[#fbf8f1] shadow-[6px_6px_0px_#1a1a1a] overflow-hidden">
+    <div className="relative border-3 border-[#1a1a1a] bg-[#fbf8f1] shadow-[6px_6px_0px_#1a1a1a] overflow-hidden">
       <div className="border-b-2 border-[#1a1a1a] px-4 py-3 bg-[#ede5d3] flex flex-wrap items-center justify-between gap-2">
         <span className="font-mono text-xs font-black uppercase tracking-wider text-[#1a1a1a]">
           SUCCESSFUL OTPS · LAST {history.length} DAYS
