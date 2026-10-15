@@ -19,9 +19,10 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  apiKeys     ApiKey[]
-  sessions    WhatsAppSessionRecord[]
-  otpTemplate OtpTemplate?
+  apiKeys       ApiKey[]
+  sessions      WhatsAppSessionRecord[]
+  otpTemplate   OtpTemplate?
+  usageCounters UsageCounter[]
 
   @@map("users")
 }
@@ -88,4 +89,20 @@ model OtpTemplate {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("otp_templates")
+}
+
+// Successful OTP sends per user, one row per day and per month (Bangladesh time).
+model UsageCounter {
+  userId      String   @map("user_id")
+  // "day" or "month"
+  period      String
+  // First day of the period, e.g. 2026-10-15 for a day or 2026-10-01 for a month
+  periodStart DateTime @map("period_start") @db.Date
+  count       Int      @default(0)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, period, periodStart])
+  @@map("usage_counters")
 }

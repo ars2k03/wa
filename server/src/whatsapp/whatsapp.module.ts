@@ -6,9 +6,10 @@ import { ApiKeyModule } from '../api_key/api_key.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { OtpTemplateModule } from '../otp_template/otp_template.module.js';
+import { UsageModule } from '../usage/usage.module.js';
 
 @Module({
-  imports: [WhatsappSessionModule, ApiKeyModule, AuthModule, PrismaModule, OtpTemplateModule],
+  imports: [WhatsappSessionModule, ApiKeyModule, AuthModule, PrismaModule, OtpTemplateModule, UsageModule],
   controllers: [WhatsappController],
   providers: [WhatsappService],
   exports: [WhatsappService],

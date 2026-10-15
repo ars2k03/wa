@@ -4,12 +4,14 @@ import { SendOtpDto } from './dto/send-otp.dto.js';
 import { ApiKeyGuard, type AuthenticatedRequest as AuthenticatedApiKeyRequest } from '../api_key/guards/api-key.guard.js';
 import { AuthGuard, type AuthenticatedRequest as AuthenticatedUserRequest } from '../auth/guards/auth.guard.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { UsageService } from '../usage/usage.service.js';
 
 @Controller()
 export class WhatsappController {
   constructor(
     private readonly whatsappService: WhatsappService,
     private readonly prisma: PrismaService,
+    private readonly usageService: UsageService,
   ) {}
 
   @Post('send-otp')
@@ -20,7 +22,17 @@ export class WhatsappController {
   ) {
     const userId = req.apiKeyRecord!.userId;
     const targetSessionId = await this.getConnectedSessionId(userId);
-    const result = await this.whatsappService.sendOtpCode(body, targetSessionId, userId);
+
+    // Count against the user's daily/monthly quota first; throws 429 when a limit is full
+    const usagePeriods = await this.usageService.reserve(userId);
+    let result: Awaited<ReturnType<WhatsappService['sendOtpCode']>>;
+    try {
+      result = await this.whatsappService.sendOtpCode(body, targetSessionId, userId);
+    } catch (err) {
+      // Only successful sends count, so give the slot back
+      await this.usageService.release(userId, usagePeriods).catch(() => {});
+      throw err;
+    }
 
     // Audit log in database
     void this.prisma.messageLog

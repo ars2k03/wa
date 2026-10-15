@@ -11,6 +11,7 @@ import { ApiKeyModule } from './api_key/api_key.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { OtpModule } from './otp/otp.module.js';
 import { OtpTemplateModule } from './otp_template/otp_template.module.js';
+import { UsageModule } from './usage/usage.module.js';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { OtpTemplateModule } from './otp_template/otp_template.module.js';
     OtpModule,
     ApiKeyModule,
     OtpTemplateModule,
+    UsageModule,
     WhatsappSessionModule,
     WhatsappModule,
   ],
