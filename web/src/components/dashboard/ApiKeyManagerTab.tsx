@@ -9,6 +9,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
+import { StableText } from '../ui/StableText';
 
 interface ApiKeyManagerTabProps {
   userId?: string | null;
@@ -214,7 +215,7 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
                           className="px-2 py-0.5 text-[11px] font-mono font-bold border border-[#1a1a1a] bg-[#fbf8f1] hover:bg-[#ede5d3] text-[#1a1a1a] shadow-[1px_1px_0px_#1a1a1a] transition-all cursor-pointer"
                           title="Copy API Key"
                         >
-                          {copiedKeyId === k.id ? '✓ COPIED' : 'COPY'}
+                          <StableText reserve={['COPY', '✓ COPIED']}>{copiedKeyId === k.id ? '✓ COPIED' : 'COPY'}</StableText>
                         </button>
                       </div>
                     </td>
@@ -309,7 +310,7 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
                   onClick={handleCopyNewKey}
                   className="whitespace-nowrap px-4 py-2.5 text-xs"
                 >
-                  {createdKeyCopied ? '✓ COPIED!' : 'COPY'}
+                  <StableText reserve={['COPY', '✓ COPIED!']}>{createdKeyCopied ? '✓ COPIED!' : 'COPY'}</StableText>
                 </Button>
               </div>
             </div>

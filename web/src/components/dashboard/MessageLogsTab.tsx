@@ -5,6 +5,7 @@ import { useMessageLogs } from '@/hooks/useMessageLogs';
 import { copyToClipboard, formatDate } from '@/utils/utils';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { StableText } from '../ui/StableText';
 
 export function MessageLogsTab() {
   const [filterText, setFilterText] = useState<string>('');
@@ -165,7 +166,7 @@ export function MessageLogsTab() {
                             className="text-[10px] px-1.5 py-0.5 border border-[#1a1a1a] bg-[#fbf8f1] hover:bg-[#ede5d3] font-bold cursor-pointer"
                             title="Copy full message ID"
                           >
-                            {copiedId === log.messageId ? '✓' : 'COPY'}
+                            <StableText reserve={['COPY', '✓']}>{copiedId === log.messageId ? '✓' : 'COPY'}</StableText>
                           </button>
                         </div>
                       ) : (

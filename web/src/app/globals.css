@@ -21,6 +21,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep scrollbar space reserved so locking scroll (modals) doesn't shift the page */
+  scrollbar-gutter: stable;
 }
 
 body {

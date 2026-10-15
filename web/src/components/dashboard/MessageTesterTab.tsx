@@ -7,6 +7,7 @@ import { useDashboardTab } from '@/context/DashboardTabContext';
 import { copyToClipboard } from '@/utils/utils';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { StableText } from '../ui/StableText';
 
 interface MessageTesterTabProps {
   userId?: string | null;
@@ -374,7 +375,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                           onClick={() => handleCopyJson(errorDetails.raw)}
                           className="px-2 py-0.5 border border-[#1a1a1a] bg-[#fbf8f1] hover:bg-[#ede5d3] text-[#1a1a1a] text-[10px] font-mono font-bold shadow-[1px_1px_0px_#1a1a1a] transition-all cursor-pointer"
                         >
-                          {copiedJson ? '✓ COPIED' : 'COPY JSON'}
+                          <StableText reserve={['COPY JSON', '✓ COPIED']}>{copiedJson ? '✓ COPIED' : 'COPY JSON'}</StableText>
                         </button>
                       </div>
                       <pre className="p-3.5 bg-[#ede5d3] border-2 border-[#7a2020] font-mono text-xs text-[#7a2020] overflow-x-auto max-h-[160px] overflow-y-auto shadow-[3px_3px_0px_#7a2020] select-all">
@@ -406,7 +407,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                         onClick={() => handleCopyJson(responseOutput)}
                         className="px-2 py-0.5 border border-[#1a1a1a] bg-[#fbf8f1] hover:bg-[#ede5d3] text-[#1a1a1a] text-[10px] font-mono font-bold shadow-[1px_1px_0px_#1a1a1a] transition-all cursor-pointer"
                       >
-                        {copiedJson ? '✓ COPIED' : 'COPY JSON'}
+                        <StableText reserve={['COPY JSON', '✓ COPIED']}>{copiedJson ? '✓ COPIED' : 'COPY JSON'}</StableText>
                       </button>
                     </div>
                     <pre className="p-3.5 bg-[#ede5d3] border-2 border-[#1a1a1a] font-mono text-xs text-[#1a1a1a] overflow-x-auto max-h-[220px] overflow-y-auto shadow-[3px_3px_0px_#1a1a1a] select-all">

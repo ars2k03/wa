@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { StableText } from '@/components/ui/StableText';
 import { api } from '@/lib/api';
 
 function VerifyForm() {
@@ -241,11 +242,13 @@ function VerifyForm() {
               disabled={resendCooldown > 0 || resending}
               className="font-bold text-[#1a1a1a] underline hover:text-[#7a2020] disabled:opacity-50 disabled:no-underline cursor-pointer"
             >
-              {resending
-                ? 'Sending...'
-                : resendCooldown > 0
-                ? `Resend in ${resendCooldown}s`
-                : 'Resend Code'}
+              <StableText reserve={['Sending...', 'Resend in 00s', 'Resend Code']}>
+                {resending
+                  ? 'Sending...'
+                  : resendCooldown > 0
+                  ? `Resend in ${resendCooldown}s`
+                  : 'Resend Code'}
+              </StableText>
             </button>
           </div>
 

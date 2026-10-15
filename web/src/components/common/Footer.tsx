@@ -4,8 +4,8 @@ import React from 'react';
 
 export function Footer() {
   return (
-    <footer className="w-full bg-[#f4efe2] border-t-2 border-[#1a1a1a] py-6 sm:py-8 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+    <footer className="w-full bg-[#f4efe2] border-t-2 border-[#1a1a1a] px-4 py-6 sm:py-8 mt-auto">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
         {/* Brand & Status */}
         <div className="flex items-center gap-2.5">
           <span className="font-serif font-black text-lg sm:text-xl text-[#1a1a1a] tracking-tight">

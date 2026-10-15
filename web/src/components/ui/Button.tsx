@@ -18,7 +18,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    'inline-flex items-center justify-center font-bold uppercase tracking-wider transition-all duration-100 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60';
+    'relative inline-flex items-center justify-center font-bold uppercase tracking-wider transition-all duration-100 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60';
 
   const sizeStyles = {
     sm: 'text-xs px-3 py-1.5 border-2',
@@ -49,8 +49,12 @@ export function Button({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading ? (
-        <span className="flex items-center gap-2">
+      {/* Label stays in the flow while loading so the button keeps its size */}
+      <span className={`inline-flex items-center justify-center ${isLoading ? 'invisible' : ''}`}>
+        {children}
+      </span>
+      {isLoading && (
+        <span className="absolute inset-0 flex items-center justify-center" aria-label="Processing">
           <svg
             className="animate-spin h-4 w-4 current-color"
             xmlns="http://www.w3.org/2000/svg"
@@ -71,10 +75,7 @@ export function Button({
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          <span>PROCESSING...</span>
         </span>
-      ) : (
-        children
       )}
     </button>
   );
