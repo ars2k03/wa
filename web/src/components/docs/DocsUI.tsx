@@ -286,10 +286,13 @@ export function CodePanel({
 
   const selectTab = (id: string) => (syncLanguage ? writeLang(id) : setLocalTab(id));
 
-  // Size the code area for the longest tab (capped at 440px) so switching tabs never changes
-  // the panel's height, and nothing on the page moves. Longer code scrolls inside the panel.
+  // Size the code area for the longest tab so switching tabs never changes the panel's height,
+  // and nothing on the page moves. On desktop it's capped at 440px and longer code scrolls inside
+  // the panel; on mobile it shows in full (horizontal scroll only), so vertical swipes over code
+  // always scroll the page instead of getting trapped in the panel.
   const maxLines = Math.max(...tabs.map((t) => t.code.split('\n').length));
-  const codeHeight = `min(calc(${maxLines * 1.7}em + 2rem), 440px)`;
+  const fullHeight = `calc(${maxLines * 1.7}em + 2rem)`;
+  const codeHeight = `min(${fullHeight}, 440px)`;
 
   const handleCopy = () => {
     copyToClipboard(current.code);
@@ -353,8 +356,8 @@ export function CodePanel({
         </div>
       )}
       <pre
-        style={{ height: codeHeight }}
-        className="code-scroll m-0 p-4 overflow-auto overscroll-contain font-mono text-[12.5px] leading-[1.7]"
+        style={{ '--code-full-h': fullHeight, '--code-h': codeHeight } as React.CSSProperties}
+        className="code-scroll m-0 p-4 min-h-[var(--code-full-h)] overflow-x-auto overflow-y-hidden lg:min-h-0 lg:h-[var(--code-h)] lg:overflow-auto font-mono text-[12.5px] leading-[1.7]"
       >
         <code>{highlight(current.code)}</code>
       </pre>
