@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
-import { Resend } from 'resend';
+import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SendOtpDto } from './dto/send-otp.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
@@ -9,8 +9,8 @@ import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 @Injectable()
 export class OtpService {
   private readonly logger = new Logger(OtpService.name);
-  private readonly resend: Resend;
-  private readonly mailFrom: string;
+  private readonly oauth2Client;
+  private readonly senderEmail: string;
   private readonly failedAttempts = new Map<string, number>();
   private readonly MAX_OTP_ATTEMPTS = 5;
 
@@ -18,9 +18,23 @@ export class OtpService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
-    this.mailFrom =
-      this.configService.get<string>('MAIL_FROM') || 'WA Gateway <onboarding@resend.dev>';
+    const clientId = this.configService.get<string>('GMAIL_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('GMAIL_CLIENT_SECRET');
+    const refreshToken = this.configService.get<string>('GMAIL_REFRESH_TOKEN');
+    this.senderEmail =
+      this.configService.get<string>('GMAIL_USER') || 'arafatsohan2003@gmail.com';
+
+    this.oauth2Client = new google.auth.OAuth2(
+      clientId,
+      clientSecret,
+      'https://developers.google.com/oauthplayground',
+    );
+
+    if (refreshToken) {
+      this.oauth2Client.setCredentials({
+        refresh_token: refreshToken,
+      });
+    }
   }
 
   async sendOtp(body: SendOtpDto | string): Promise<{ success: boolean; message: string }> {
@@ -54,8 +68,8 @@ export class OtpService {
 
     this.logger.log(`Dispatched verification OTP to email: ${email}`);
 
-    // Dispatch email via Resend
-    await this.sendEmail(
+    // Dispatch email using official Gmail API
+    await this.sendGmailMessage(
       email,
       'Verification Code - WA Gateway',
       this.buildOtpHtml(otp),
@@ -147,22 +161,43 @@ export class OtpService {
     };
   }
 
-  private async sendEmail(to: string, subject: string, html: string) {
-    const { error } = await this.resend.emails.send({
-      from: this.mailFrom,
-      to,
-      subject,
-      html,
-    });
+  private async sendGmailMessage(to: string, subject: string, htmlContent: string) {
+    try {
+      const gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
 
-    if (error) {
-      this.logger.error('Failed to send email via Resend:', error);
+      const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+      const messageParts = [
+        `From: "WA Gateway" <${this.senderEmail}>`,
+        `To: <${to}>`,
+        `Subject: ${utf8Subject}`,
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=utf-8',
+        'Content-Transfer-Encoding: 7bit',
+        '',
+        htmlContent,
+      ];
+
+      const rawMessage = messageParts.join('\r\n');
+      const encodedMessage = Buffer.from(rawMessage)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage,
+        },
+      });
+
+      this.logger.log(`Gmail API message sent to: ${to} ✉️`);
+    } catch (err: any) {
+      this.logger.error('Failed to send email via Gmail API:', err?.response?.data || err?.message || err);
       throw new InternalServerErrorException(
-        `Failed to dispatch verification email: ${error.message || 'Resend error'}`,
+        `Failed to dispatch verification email: ${err?.message || 'Gmail API error'}`,
       );
     }
-
-    this.logger.log(`Resend message sent to: ${to} ✉️`);
   }
 
   private buildOtpHtml(otp: string): string {

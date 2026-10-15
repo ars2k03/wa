@@ -88,7 +88,7 @@
                 "register"
               ]
             },
-            "description": "Creates an unverified user account and dispatches a 6-digit email OTP via Resend."
+            "description": "Creates an unverified user account and dispatches a 6-digit email OTP via Gmail API."
           },
           "response": []
         },
@@ -194,7 +194,7 @@
                 "send"
               ]
             },
-            "description": "Sends a fresh 6-digit OTP code to the given email address using Resend."
+            "description": "Sends a fresh 6-digit OTP code to the given email address using Gmail API."
           },
           "response": []
         },

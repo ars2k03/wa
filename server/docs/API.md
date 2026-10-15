@@ -260,7 +260,7 @@ Retrieves the logged-in user profile from the JWT payload.
 ### 3. Email OTP Verification
 
 #### `POST /otp/send`
-Dispatches a 6-digit verification code to the registered email address via Resend.
+Dispatches a 6-digit verification code to the registered email address via Gmail API.
 
 * **Auth:** Public
 * **Request Body:**
