@@ -87,7 +87,7 @@ function RegisterForm() {
     try {
       await register(name.trim(), email.trim(), password);
       // Workflow: sign up -> verify page
-      router.push(`/verify?email=${encodeURIComponent(email.trim())}`);
+      router.push(`/verify?email=${encodeURIComponent(email.trim())}&from=signup`);
     } catch (err: any) {
       setError(err?.message || 'Registration failed');
     }

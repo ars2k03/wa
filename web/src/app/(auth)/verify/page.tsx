@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { StableText } from '@/components/ui/StableText';
+import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 
 function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get('email') || '';
+  const fromParam = searchParams.get('from') || '';
+  const { setAuthSession } = useAuth();
 
   const [email, setEmail] = useState(emailParam);
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
@@ -101,11 +104,14 @@ function VerifyForm() {
       });
 
       if (res.success) {
-        setSuccess('Email verified successfully! Redirecting to login...');
-        setTimeout(() => {
-          // Workflow: verify -> login page
-          router.push(`/login?verified=true&email=${encodeURIComponent(email.trim())}`);
-        }, 1200);
+        if (fromParam === 'login' && res.data?.token && res.data?.user) {
+          setAuthSession(res.data.user, res.data.token);
+          router.replace('/dashboard');
+          return;
+        }
+
+        // Workflow: signup -> verify -> login immediately without delay
+        router.push(`/login?verified=true&email=${encodeURIComponent(email.trim())}`);
       } else {
         setError(res.message || 'Verification failed');
       }

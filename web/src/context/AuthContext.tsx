@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password?: string) => Promise<any>;
   register: (name: string, email: string, password?: string) => Promise<any>;
   logout: () => void;
+  setAuthSession: (user: User, token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -163,6 +164,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const setAuthSession = useCallback((authUser: User, authToken: string) => {
+    setUser(authUser);
+    setToken(authToken);
+    try {
+      localStorage.setItem(TOKEN_KEY, authToken);
+      localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+    } catch (err) {
+      console.warn('Error saving auth to storage:', err);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
@@ -186,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        setAuthSession,
       }}
     >
       {children}

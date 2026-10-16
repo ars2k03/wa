@@ -97,10 +97,7 @@ function LoginForm() {
         res?.data?.isVerified === false ||
         res?.statusCode === 403
       ) {
-        setInfoMessage('Account not verified yet. Redirecting to verification...');
-        setTimeout(() => {
-          router.push(`/verify?email=${encodeURIComponent(email.trim())}`);
-        }, 1200);
+        router.push(`/verify?email=${encodeURIComponent(email.trim())}&from=login`);
         return;
       }
     } catch (err: any) {
@@ -112,10 +109,7 @@ function LoginForm() {
         err?.message?.includes('not verified');
 
       if (isUnverified) {
-        setInfoMessage('Account not verified yet. Redirecting to verification...');
-        setTimeout(() => {
-          router.push(`/verify?email=${encodeURIComponent(email.trim())}`);
-        }, 1200);
+        router.push(`/verify?email=${encodeURIComponent(email.trim())}&from=login`);
         return;
       }
 
