@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -21,33 +21,27 @@ export class AuthService {
     const password = rawPassword ? await bcrypt.hash(rawPassword, 10) : null;
 
     // Check existing user
-    let user = await this.prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
 
-    if (user && user.isVerified) {
-      throw new BadRequestException('An account with this email already exists. Please log in.');
+    if (existingUser) {
+      if (existingUser.isVerified) {
+        throw new BadRequestException('An account with this email already exists. Please log in.');
+      }
+      throw new BadRequestException(
+        'An account with this email has already been registered but is not verified. Please log in to complete verification.',
+      );
     }
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name,
-          password,
-          isVerified: false,
-        },
-      });
-    } else {
-      // Update unverified user credentials
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          name,
-          password,
-        },
-      });
-    }
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        name,
+        password,
+        isVerified: false,
+      },
+    });
 
     // Send 6-digit OTP via official Gmail API
     await this.otpService.sendOtp(email);
@@ -92,7 +86,7 @@ export class AuthService {
         /* ignore delivery error on login attempt */
       }
 
-      return {
+      throw new ForbiddenException({
         statusCode: HttpStatus.FORBIDDEN,
         success: false,
         isVerified: false,
@@ -100,7 +94,7 @@ export class AuthService {
         data: {
           email: user.email,
         },
-      };
+      });
     }
 
     const token = await this.generateToken(user.id, user.email, user.name);
