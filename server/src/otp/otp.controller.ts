@@ -24,6 +24,7 @@ export class OtpController {
       statusCode: HttpStatus.OK,
       success: true,
       message: result.message,
+      data: result.data,
     };
   }
 }

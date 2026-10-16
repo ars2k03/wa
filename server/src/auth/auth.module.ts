@@ -13,6 +13,7 @@ import { AuthGuard } from './guards/auth.guard.js';
     ConfigModule,
     OtpModule,
     JwtModule.registerAsync({
+      global: true,
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

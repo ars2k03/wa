@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -17,6 +18,7 @@ export class OtpService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {
     const clientId = this.configService.get<string>('GMAIL_CLIENT_ID');
     const clientSecret = this.configService.get<string>('GMAIL_CLIENT_SECRET');
@@ -82,7 +84,18 @@ export class OtpService {
     };
   }
 
-  async verifyOtp(body: VerifyOtpDto): Promise<{ success: boolean; message: string }> {
+  async verifyOtp(body: VerifyOtpDto): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      token: string;
+      user: {
+        id: string;
+        name: string | null;
+        email: string | null;
+      };
+    };
+  }> {
     const { email, otp } = body;
 
     const user = await this.prisma.user.findUnique({
@@ -145,7 +158,7 @@ export class OtpService {
     this.failedAttempts.delete(emailKey);
 
     // Mark as verified & clear OTP
-    await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { email },
       data: {
         isVerified: true,
@@ -154,11 +167,25 @@ export class OtpService {
       },
     });
 
+    const token = await this.jwtService.signAsync({
+      sub: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+    });
+
     this.logger.log(`Account verified successfully for ${email} ✅`);
 
     return {
       success: true,
-      message: 'Email verified successfully. You can now log in.',
+      message: 'Email verified successfully.',
+      data: {
+        token,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+        },
+      },
     };
   }
 
