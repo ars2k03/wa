@@ -89,6 +89,19 @@ function LoginForm() {
       // If user verified successfully -> go to dashboard
       if (res?.data?.token) {
         router.push('/dashboard');
+        return;
+      }
+
+      if (
+        res?.isVerified === false ||
+        res?.data?.isVerified === false ||
+        res?.statusCode === 403
+      ) {
+        setInfoMessage('Account not verified yet. Redirecting to verification...');
+        setTimeout(() => {
+          router.push(`/verify?email=${encodeURIComponent(email.trim())}`);
+        }, 1200);
+        return;
       }
     } catch (err: any) {
       // Workflow: login -> if verified false -> verify page
