@@ -1,155 +1,117 @@
-# The Telegraphic Dispatch — WhatsApp Gateway Frontend
+<div align="center">
 
-A bespoke, production-ready SaaS operator console and marketing interface for the **Multi-Tenant WhatsApp OTP Gateway**, engineered with **Next.js 16 (App Router)**, **React 19**, and **Tailwind CSS v4**.
+<img src="public/icon.svg" width="96" height="96" alt="WA Gateway logo" />
 
----
+# WA Gateway Web
 
-## 📜 Aesthetic Identity & Design System
+**Website, developer docs and dashboard for WA Gateway.**
 
-This frontend departs from generic SaaS dashboard templates by implementing a distinct **Vintage Newsprint Broadsheet & Retro Editorial Brutalism** design language (inspired by traditional printing presses and linotype broadsheets):
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
 
-* **Color Palette**:
-  * Newsprint Cream: `#fbf8f1`
-  * Aged Paper Tint: `#f4efe2`
-  * Printer Ink Black: `#1a1a1a`
-  * Muted Charcoal Ink: `#524d43`
-  * Editorial Oxblood / Burgundy: `#7a2020`
-  * Official Stamp Green: `#2e6930` (active WhatsApp status)
-  * Alert Amber: `#b45309` (pairing / scanning state)
-* **Tactile Mechanical Feedback**: Hard solid borders (`2px border-[#1a1a1a]`) with offset drop shadows (`shadow-[3px_3px_0px_#1a1a1a]`) and tactile press states (`active:translate-x-[2px] active:translate-y-[2px]`).
-* **Typography**: Elegant editorial serif headlines paired with high-legibility monospace fonts for codes, keys, and timestamps.
+[Live site](https://wa.ars2k03.tech) · [Project README](../../README.md) · [Server](../server/README.md) · [Design system](DESIGN.md)
+
+</div>
 
 ---
 
-## 🚀 Pages & Core Features
+## Overview
 
-### 1. Broadsheet Front Page (`/`)
-* **Newspaper Masthead**: Editorial headline bar featuring a real-time gateway status indicator and live date ticker.
-* **Telegraph Terminal Simulation**: Interactive terminal demonstrating rapid OTP dispatching.
-* **Architectural Capability Cards**: 6-column editorial grid showcasing Baileys WebSockets, Redis session isolation, cryptographic key minting, and rate limiting.
-* **Operating Protocol**: 3-stage visual guide: *Account Enrollment → Apparatus Handshake → Wire Dispatch*.
-* **Multi-Language Wire Snippets**: Ready-to-copy code samples in **cURL**, **Node.js**, **Python**, **PHP**, and **Go**.
+The web app is where users create an account, link WhatsApp, manage API keys and read the integration guide. It runs on port `3000` in development and calls the [server](../server/README.md) for all data.
 
-### 2. Authentication Suite (`/(auth)`)
-* **Register (`/register`)**: Account creation with validation and automatic 6-digit email OTP dispatch via Gmail API.
-* **Email Verification (`/verify`)**: Dedicated 6-digit OTP code input screen with countdown timer and resend functionality.
-* **Login (`/login`)**: Operator authentication with persistent JWT session management (`AuthContext`).
+## Pages
 
-### 3. Central Dispatch Console (`/dashboard`)
-* **WhatsApp Device (QR Pairing)**:
-  * Live Base64 QR code rendering with adaptive status polling (every 2.5 seconds while pairing, 5 seconds otherwise).
-  * Instant status indicator (`qr_ready`, `connecting`, `connected`, `disconnected`) and the linked phone number.
-* **API Keys**:
-  * Mint unique cryptographic keys (`_ars_2k03_...`).
-  * One-click clipboard copy and permanent key revocation.
-* **Custom Template**:
-  * Edit the WhatsApp OTP message: body with `{{code}}`, footer, and an optional one-tap copy button with custom label.
-  * Live WhatsApp-style preview, length limits, and one-click reset to the default template.
-* **Playground**:
-  * Form to send real WhatsApp OTPs through `/send-otp` with your API key.
-  * Request latency measurement and a response inspector with copy-as-JSON.
-* **Message Logs**:
-  * Table of sent messages with recipient numbers, delivery status, and Baileys message IDs.
-* **Usage**:
-  * Today's and this month's OTP usage against the limits (100/day, 3,000/month, Bangladesh time), reset times, and a 30-day history chart.
+| Route | Page | Description |
+|---|---|---|
+| `/` | Landing page | Product overview, animated cURL demo and 4-step setup guide |
+| `/register` | Register | Create an account and receive an email code |
+| `/verify` | Verify | Enter the 6-digit code, with a countdown and resend option |
+| `/login` | Login | Sign in to the dashboard |
+| `/dashboard` | Dashboard | Manage devices, keys, templates, logs and usage |
+| `/docs` | Developer docs | Public integration guide and API examples |
 
-### 4. Developer Docs (`/docs`)
-* Public integration guide: quickstart, authentication, phone number format, rate & usage limits, sending and verifying OTPs, error handling, message preview, custom templates, message logs, best practices, and FAQ.
-* Ready-to-copy code samples in **cURL**, **Node.js**, **Python**, **PHP**, and **Go** with a synced language picker.
-* Mobile-friendly layout: code blocks scroll sideways only on small screens, so the page always scrolls normally.
+## Dashboard
 
----
+| Tab | Description |
+|---|---|
+| **WhatsApp Device** | Link WhatsApp by QR code and watch the connection status, polled every 2.5 seconds while pairing and every 5 seconds otherwise |
+| **API Keys** | Create and revoke keys; a full key is shown only once, when it is created |
+| **Custom Template** | Edit the message body, footer and copy button, with a live WhatsApp-style preview |
+| **Playground** | Paste your API key, send a real OTP and inspect the response and latency |
+| **Message Logs** | Review recipients, delivery status and message IDs |
+| **Usage** | Compare usage with the daily and monthly limits, and view 30 days of history |
 
-## 📁 Directory Structure
+## Developer Docs
 
-```text
+The `/docs` page covers the quickstart, authentication, phone number format, limits, sending and verifying OTPs, error handling, custom templates, message logs and best practices. Code samples are available in cURL, Node.js, Python, PHP and Go.
+
+## Design
+
+The interface uses a vintage newsprint and editorial brutalist style: cream paper tones, ink-black borders, hard offset shadows, serif headlines and monospace details. Read [`DESIGN.md`](DESIGN.md) before changing UI code.
+
+## Project Structure
+
+```
 apps/web/
-├── public/                 # Static assets, favicon, icons
+├── public/               # Static assets
 ├── src/
-│   ├── app/                # Next.js 16 App Router
-│   │   ├── (auth)/         # Authentication route group
-│   │   │   ├── login/      # Sign-in page
-│   │   │   ├── register/   # Sign-up page
-│   │   │   └── verify/     # Email OTP verification page
-│   │   ├── (homepage)/     # Broadsheet landing page
-│   │   ├── dashboard/      # Operator console (Device, Keys, Template, Playground, Logs, Usage)
-│   │   ├── docs/           # Public developer documentation page
-│   │   ├── globals.css     # Tailwind v4 theme, fonts & print styling
-│   │   └── layout.tsx      # Root HTML & body shell
-│   ├── components/         # Reusable UI elements, terminals, forms & tables
-│   ├── context/            # AuthContext (JWT, user state) & DashboardTabContext
-│   ├── hooks/              # Data hooks (session polling, API keys, logs, OTP template, usage)
-│   ├── lib/                # API client wrapper & HTTP helpers
-│   ├── types/              # TypeScript interfaces (User, Session, ApiKey, ...)
-│   └── utils/              # Helpers, docs code snippets & OTP template validation
-├── .env.example            # Environment variables template
-├── .env.local              # Local environment configuration
-├── next.config.ts          # Next.js configuration
-├── package.json            # Project dependencies & scripts
-├── DESIGN.md               # Visual design system specifications
-└── README.md
+│   ├── app/
+│   │   ├── (auth)/       # Login, register and verify pages
+│   │   ├── (homepage)/   # Landing page
+│   │   ├── dashboard/    # Dashboard
+│   │   ├── docs/         # Developer docs
+│   │   ├── globals.css   # Tailwind theme and global styles
+│   │   └── layout.tsx    # Root layout
+│   ├── components/
+│   │   ├── common/       # Site navbar and footer
+│   │   ├── dashboard/    # Dashboard tabs and navigation
+│   │   ├── docs/         # Docs navigation and previews
+│   │   ├── landing/      # Landing page sections
+│   │   └── ui/           # Shared UI components
+│   ├── context/          # Auth and dashboard tab state
+│   ├── hooks/            # Data hooks
+│   ├── lib/              # API client
+│   ├── types/            # Shared types
+│   └── utils/            # Helpers, code snippets and template validation
+├── DESIGN.md             # Design system
+└── next.config.ts        # Next.js configuration
 ```
 
----
+## Getting Started
 
-## ⚙️ Environment Configuration
+You need Node.js 24 or newer, pnpm 12 and a running [server](../server/README.md). Run these commands from the repository root.
 
-Create a `.env.local` file in the `apps/web/` directory:
-
-```bash
-# Backend Gateway API Base URL
-# Local development:
-NEXT_PUBLIC_API_URL=http://localhost:3002
-
-# Production deployment:
-# NEXT_PUBLIC_API_URL=https://your-backend-domain.com
-```
-
----
-
-## 🛠️ Getting Started
-
-### Prerequisites
-* **Node.js**: `v20.x`, `v22.x`, or `v24.x`
-* **pnpm**: `v12.x` or higher
-* **Running Backend**: Ensure the NestJS backend gateway is running on port `3002`.
-
-### Installation & Run
-
-1. **Install dependencies**:
+1. Install dependencies and create the env file:
    ```bash
    pnpm install
+   cp apps/web/.env.example apps/web/.env.local
    ```
+2. Set the API URL in `apps/web/.env.local`:
 
-2. **Configure environment**:
+   | Variable | Description |
+   |---|---|
+   | `NEXT_PUBLIC_API_URL` | Server URL, `http://localhost:3002` by default |
+
+3. Start the development server:
    ```bash
-   cp .env.example .env.local
+   pnpm --filter web dev
    ```
 
-3. **Start the development server**:
-   ```bash
-   pnpm dev
-   ```
+The site opens at <http://localhost:3000>.
 
-4. **Access the Application**:
-   Open your browser and navigate to:
-   * **Landing Page**: [http://localhost:3000](http://localhost:3000)
-   * **Operator Console**: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
-   * **Developer Docs**: [http://localhost:3000/docs](http://localhost:3000/docs)
+## Scripts
 
----
+Run with `pnpm --filter web <script>`.
 
-## 📦 Available Scripts
+| Script | Description |
+|---|---|
+| `dev` | Start the development server |
+| `build` | Create a production build |
+| `start` | Run the production build |
+| `lint` | Lint with ESLint |
 
-* `pnpm dev` — Launch Next.js development server with Turbopack / HMR at `http://localhost:3000`
-* `pnpm build` — Create an optimized production build
-* `pnpm start` — Start the production server
-* `pnpm lint` — Run ESLint checks across the codebase
+## License
 
----
-
-## 🔗 Related Documentation
-
-* **Backend Service**: [`../server/README.md`](../server/README.md)
-* **Complete REST API Specification**: [`../server/docs/API.md`](../server/docs/API.md)
-* **Editorial Design System**: [`./DESIGN.md`](./DESIGN.md)
+[MIT](../../LICENSE) © 2026 A R S Arafat.

@@ -35,7 +35,7 @@ export function useApiKeys(userId?: string | null) {
           name,
         });
         if (res.success && res.data) {
-          setKeys((prev) => [res.data, ...prev]);
+          await fetchKeys();
           return res.data;
         } else {
           throw new Error(res.message || 'Failed to create API key');
@@ -47,7 +47,7 @@ export function useApiKeys(userId?: string | null) {
         setLoading(false);
       }
     },
-    [userId],
+    [userId, fetchKeys],
   );
 
   const deleteKey = useCallback(async (keyId: string) => {

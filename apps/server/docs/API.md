@@ -308,7 +308,7 @@ Validates the 6-digit OTP code received by email. Once verified, marks the user 
 ### 4. API Key Management
 
 #### `POST /api-keys`
-Generates a new secure API Key with prefix `_ars_2k03_`. Messages sent with the key go through the owner's connected WhatsApp device (one account = one WhatsApp).
+Generates a new secure API Key with prefix `_ars_2k03_`. The full key appears only in this response, so save it now. Only its SHA-256 hash is stored, and it cannot be retrieved later. Messages sent with the key go through the owner's connected WhatsApp device (one account = one WhatsApp).
 
 * **Auth:** `Bearer <token>`
 * **Request Body:**
@@ -328,6 +328,7 @@ Generates a new secure API Key with prefix `_ars_2k03_`. Messages sent with the 
   "data": {
     "id": "clxxxxxxxxxxx",
     "key": "_ars_2k03_a9f1b8c2d3e4f5061728394a5b6c7d8e9f0123456789abcd",
+    "keyPrefix": "_ars_2k03_a9f1b8c2",
     "name": "E-Commerce Production Key",
     "userId": "cm2xxxxxxxxx",
     "isActive": true,
@@ -340,7 +341,7 @@ Generates a new secure API Key with prefix `_ars_2k03_`. Messages sent with the 
 ---
 
 #### `GET /api-keys/:userId`
-Lists all API keys created by the user.
+Lists all API keys created by the user. Only the key prefix is returned, never the full key.
 
 * **Auth:** `Bearer <token>`
 * **Path Parameter:**
@@ -354,7 +355,7 @@ Lists all API keys created by the user.
   "data": [
     {
       "id": "clxxxxxxxxxxx",
-      "key": "_ars_2k03_a9f1b8c2d3e4f5061728394a5b6c7d8e9f0123456789abcd",
+      "keyPrefix": "_ars_2k03_a9f1b8c2",
       "name": "E-Commerce Production Key",
       "userId": "cm2xxxxxxxxx",
       "isActive": true,
@@ -534,7 +535,7 @@ Fetches the last 100 message audit logs associated with the authenticated user's
     {
       "id": "clyxxxxxxxxxxx",
       "sessionId": "session_01",
-      "apiKey": "_ars_2k03_a9f1b8c2...",
+      "apiKeyId": "clxxxxxxxxxxx",
       "recipient": "01712345678",
       "messageType": "otp",
       "messageId": "3EB0XXXXXXXXXXXX",

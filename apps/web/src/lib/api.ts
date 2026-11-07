@@ -1,5 +1,6 @@
 import type {
   ApiKey,
+  CreatedApiKey,
   ApiResponse,
   MessageLog,
   OtpTemplate,
@@ -131,8 +132,8 @@ export const api = {
   createApiKey: async (payload: {
     userId?: string;
     name?: string;
-  }): Promise<ApiResponse<ApiKey>> => {
-    return fetchJson<ApiResponse<ApiKey>>('/api-keys', {
+  }): Promise<ApiResponse<CreatedApiKey>> => {
+    return fetchJson<ApiResponse<CreatedApiKey>>('/api-keys', {
       method: 'POST',
       body: JSON.stringify(payload),
     });

@@ -29,7 +29,8 @@ model User {
 
 model ApiKey {
   id         String    @id @default(uuid())
-  key        String    @unique
+  keyHash    String    @unique @map("key_hash")
+  keyPrefix  String    @map("key_prefix")
   name       String    @default("Default Key")
   userId     String    @map("user_id")
   isActive   Boolean   @default(true) @map("is_active")
@@ -39,7 +40,6 @@ model ApiKey {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([key])
   @@index([userId])
   @@map("api_keys")
 }
@@ -63,7 +63,7 @@ model WhatsAppSessionRecord {
 model MessageLog {
   id          String   @id @default(uuid())
   sessionId   String   @map("session_id")
-  apiKey      String?  @map("api_key")
+  apiKeyId    String?  @map("api_key_id")
   recipient   String
   messageType String   @default("otp") @map("message_type")
   messageId   String?  @map("message_id")
@@ -71,7 +71,7 @@ model MessageLog {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([sessionId])
-  @@index([apiKey])
+  @@index([apiKeyId])
   @@map("message_logs")
 }
 

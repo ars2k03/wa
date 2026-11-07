@@ -85,21 +85,21 @@ export class WhatsappService {
     }
 
     const [userApiKeys, userSessions] = await Promise.all([
-      this.prisma.apiKey.findMany({ where: { userId }, select: { key: true } }),
+      this.prisma.apiKey.findMany({ where: { userId }, select: { id: true } }),
       this.prisma.whatsAppSessionRecord.findMany({ where: { userId }, select: { sessionId: true } }),
     ]);
 
-    const keys = userApiKeys.map((k) => k.key);
+    const keyIds = userApiKeys.map((k) => k.id);
     const sessionIds = userSessions.map((s) => s.sessionId);
 
-    if (keys.length === 0 && sessionIds.length === 0) {
+    if (keyIds.length === 0 && sessionIds.length === 0) {
       return [];
     }
 
     return this.prisma.messageLog.findMany({
       where: {
         OR: [
-          { apiKey: { in: keys } },
+          { apiKeyId: { in: keyIds } },
           { sessionId: { in: sessionIds } },
         ],
       },

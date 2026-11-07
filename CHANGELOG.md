@@ -9,6 +9,11 @@ Notable changes to WA Gateway. The format follows [Keep a Changelog](https://kee
 - MIT license and public repository files: README, contributing guide, code of conduct, security policy, support guide, issue and pull request templates, and code owners
 - Turborepo pipeline and pnpm workspace
 
+### Security
+
+- API keys are stored as SHA-256 hashes and shown only once, when created
+- Message logs reference keys by ID instead of storing the key
+
 ### Changed
 
 - Merged the separate API and web repositories into one monorepo, keeping the history of both

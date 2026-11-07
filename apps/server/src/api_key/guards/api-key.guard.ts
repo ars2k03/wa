@@ -5,7 +5,6 @@ import { ApiKeyService } from '../api_key.service.js';
 export interface AuthenticatedRequest extends Request {
   apiKeyRecord?: {
     id: string;
-    key: string;
     userId: string;
   };
   userId?: string;

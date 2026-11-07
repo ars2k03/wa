@@ -47,16 +47,6 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
     }
   };
 
-  // Set default active key when keys load
-  useEffect(() => {
-    if (!selectedKey && keys.length > 0) {
-      const activeKey = keys.find((k) => k.isActive);
-      if (activeKey) {
-        setSelectedKey(activeKey.key);
-      }
-    }
-  }, [keys, selectedKey]);
-
   useEffect(() => {
     if (initialKey) {
       setSelectedKey(initialKey);
@@ -76,7 +66,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
         errorStatusText: 'VALIDATION ERROR',
         icon: '🔑',
         title: 'API Key Required',
-        message: 'Please select or generate an API key to authenticate this request.',
+        message: 'Please paste an API key to authenticate this request.',
         actionType: 'keys',
       });
       return;
@@ -151,7 +141,7 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
         title = 'Authentication Failed';
         statusText = '401 UNAUTHORIZED';
         message =
-          'The provided API Key is invalid or inactive. Please choose an active key from the API Keys tab.';
+          'The provided API Key is invalid or inactive. Check the key, or create a new one in the API Keys tab.';
         actionType = 'keys';
       } else if (
         status === 400 &&
@@ -216,24 +206,20 @@ export function MessageTesterTab({ userId, initialKey }: MessageTesterTabProps) 
                 </label>
 
                 {activeKeys.length > 0 ? (
-                  <div className="relative">
-                    <select
-                      className="w-full appearance-none px-3.5 py-2.5 pr-12 bg-[#ffffff] border-2 border-[#1a1a1a] font-mono text-xs font-bold text-[#1a1a1a] shadow-[2px_2px_0px_#1a1a1a] focus:outline-none focus:shadow-[3px_3px_0px_#7a2020] transition-all cursor-pointer"
+                  <div className="space-y-1">
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      spellCheck={false}
+                      aria-label="API key"
+                      className="w-full px-3.5 py-2.5 bg-[#ffffff] border-2 border-[#1a1a1a] font-mono text-xs font-bold text-[#1a1a1a] shadow-[2px_2px_0px_#1a1a1a] focus:outline-none"
                       value={selectedKey}
                       onChange={(e) => setSelectedKey(e.target.value)}
-                    >
-                      <option value="">-- SELECT AN API KEY --</option>
-                      {activeKeys.map((k) => (
-                        <option key={k.id} value={k.key}>
-                          {k.name} ({k.key.slice(0, 16)}...)
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 border-l-2 border-[#1a1a1a] bg-[#f4efe2] text-[#1a1a1a]">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="square" strokeLinejoin="miter" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+                      placeholder="_ars_2k03_..."
+                    />
+                    <p className="font-mono text-[11px] text-[#524d43]">
+                      Paste your key. A key is shown only once, when it is created.
+                    </p>
                   </div>
                 ) : (
                   <div className="p-3 bg-[#fae8e8] border-2 border-[#7a2020] text-xs font-mono text-[#7a2020] flex items-center justify-between gap-2">

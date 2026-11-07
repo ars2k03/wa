@@ -12,13 +12,18 @@ export interface User {
 
 export interface ApiKey {
   id: string;
-  key: string;
+  keyPrefix: string;
   name: string;
   userId: string;
   isActive: boolean;
   lastUsedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// The full key is returned only by the create request
+export interface CreatedApiKey extends ApiKey {
+  key: string;
 }
 
 export interface SessionInfo {
@@ -50,7 +55,7 @@ export interface OtpTemplate extends OtpTemplateContent {
 export interface MessageLog {
   id: string;
   sessionId: string;
-  apiKey: string | null;
+  apiKeyId: string | null;
   recipient: string;
   messageType: string;
   messageId: string | null;

@@ -39,7 +39,7 @@ export class WhatsappController {
       .create({
         data: {
           sessionId: targetSessionId,
-          apiKey: req.apiKeyRecord?.key ?? null,
+          apiKeyId: req.apiKeyRecord?.id ?? null,
           recipient: body.phoneNumber,
           messageType: 'otp',
           messageId: result.messageId,

@@ -1,11 +1,16 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApiKeyDto } from './dto/create-api-key.dto.js';
 
+const KEY_PREFIX_LENGTH = 18;
+
+export function hashApiKey(key: string): string {
+  return createHash('sha256').update(key).digest('hex');
+}
+
 export interface CachedApiKey {
   id: string;
-  key: string;
   userId: string;
   isActive: boolean;
   cachedAt: number;
@@ -45,15 +50,17 @@ export class ApiKeyService {
 
     const record = await this.prisma.apiKey.create({
       data: {
-        key,
+        keyHash: hashApiKey(key),
+        keyPrefix: key.slice(0, KEY_PREFIX_LENGTH),
         name,
         userId,
         isActive: true,
       },
+      omit: { keyHash: true },
     });
 
-    
-    return record;
+    // The only time the full key is available; just its hash is stored
+    return { ...record, key };
   }
 
   /**
@@ -64,8 +71,9 @@ export class ApiKeyService {
       throw new UnauthorizedException('API key is required');
     }
 
+    const keyHash = hashApiKey(key);
     const now = Date.now();
-    const cached = this.memoryCache.get(key);
+    const cached = this.memoryCache.get(keyHash);
 
     if (cached && now - cached.cachedAt < this.CACHE_TTL_MS) {
       if (!cached.isActive) {
@@ -75,7 +83,7 @@ export class ApiKeyService {
     }
 
     const apiKey = await this.prisma.apiKey.findUnique({
-      where: { key },
+      where: { keyHash },
       include: { user: true },
     });
 
@@ -89,12 +97,11 @@ export class ApiKeyService {
 
     const cachedData: CachedApiKey = {
       id: apiKey.id,
-      key: apiKey.key,
       userId: apiKey.userId,
       isActive: apiKey.isActive,
       cachedAt: now,
     };
-    this.memoryCache.set(key, cachedData);
+    this.memoryCache.set(keyHash, cachedData);
 
     // Update lastUsedAt asynchronously in the background
     void this.prisma.apiKey
@@ -115,6 +122,7 @@ export class ApiKeyService {
   async getUserApiKeys(userId: string) {
     return this.prisma.apiKey.findMany({
       where: { userId },
+      omit: { keyHash: true },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -139,7 +147,7 @@ export class ApiKeyService {
       where: { id: keyId },
     });
 
-    this.memoryCache.delete(record.key);
+    this.memoryCache.delete(record.keyHash);
     this.logger.log(`Deleted API Key: ${keyId}`);
     return { id: keyId, deleted: true };
   }

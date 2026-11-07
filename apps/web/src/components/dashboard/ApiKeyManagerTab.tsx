@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { copyToClipboard, formatDate, formatTimeAgo, maskApiKey } from '@/utils/utils';
+import { copyToClipboard, formatDate, formatTimeAgo } from '@/utils/utils';
 import type { ApiKey } from '@/types/types';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -25,9 +25,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [createdKeyCopied, setCreatedKeyCopied] = useState<boolean>(false);
-
-  // Table Row Copy State
-  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
 
   // Delete Confirmation Modal States
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
@@ -74,15 +71,6 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
     }
   };
 
-  const handleRowCopy = async (k: ApiKey) => {
-    const success = await copyToClipboard(k.key);
-    if (success) {
-      setCopiedKeyId(k.id);
-      setTimeout(() => setCopiedKeyId(null), 2000);
-      if (onKeySelect) onKeySelect(k.key);
-    }
-  };
-
   const handleDeleteConfirm = async () => {
     if (!keyToDelete) return;
     setIsDeleting(true);
@@ -126,7 +114,7 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
         }
       >
         <p className="font-serif text-sm text-[#524d43] leading-relaxed">
-          Use secret API keys to authenticate HTTP requests to send WhatsApp messages and OTPs from your applications.
+          Use secret API keys to authenticate HTTP requests to send WhatsApp messages and OTPs from your applications. A key is shown only once, when it is created.
         </p>
 
         {error && (
@@ -184,7 +172,7 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
               <thead>
                 <tr className="border-b-2 border-[#1a1a1a] bg-[#f4efe2] text-xs font-mono uppercase text-[#1a1a1a]">
                   <th className="p-3.5 border-r border-[#1a1a1a]">NAME</th>
-                  <th className="p-3.5 border-r border-[#1a1a1a]">SECRET KEY</th>
+                  <th className="p-3.5 border-r border-[#1a1a1a]">KEY</th>
                   <th className="p-3.5 border-r border-[#1a1a1a]">CREATED</th>
                   <th className="p-3.5 border-r border-[#1a1a1a]">LAST USED</th>
                   <th className="p-3.5 border-r border-[#1a1a1a]">STATUS</th>
@@ -205,19 +193,9 @@ export function ApiKeyManagerTab({ userId, onKeySelect }: ApiKeyManagerTabProps)
                     </td>
 
                     <td className="p-3.5 border-r border-[#1a1a1a]">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[#1a1a1a] font-bold select-all bg-[#ede5d3] px-2 py-0.5 border border-[#1a1a1a]/30">
-                          {maskApiKey(k.key)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleRowCopy(k)}
-                          className="px-2 py-0.5 text-[11px] font-mono font-bold border border-[#1a1a1a] bg-[#fbf8f1] hover:bg-[#ede5d3] text-[#1a1a1a] shadow-[1px_1px_0px_#1a1a1a] transition-all cursor-pointer"
-                          title="Copy API Key"
-                        >
-                          <StableText reserve={['COPY', '✓ COPIED']}>{copiedKeyId === k.id ? '✓ COPIED' : 'COPY'}</StableText>
-                        </button>
-                      </div>
+                      <span className="font-mono text-[#1a1a1a] font-bold bg-[#ede5d3] px-2 py-0.5 border border-[#1a1a1a]/30">
+                        {k.keyPrefix}...
+                      </span>
                     </td>
 
                     <td className="p-3.5 border-r border-[#1a1a1a] text-[#524d43]">

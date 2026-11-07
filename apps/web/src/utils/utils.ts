@@ -60,8 +60,3 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function maskApiKey(key: string): string {
-  if (!key) return '';
-  if (key.length <= 16) return key;
-  return `${key.slice(0, 14)}...${key.slice(-6)}`;
-}
