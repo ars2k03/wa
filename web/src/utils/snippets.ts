@@ -1,6 +1,6 @@
 import type { CodeTab } from '@/components/docs/DocsUI';
 
-// Every snippet here must match the real backend (backend/src/whatsapp/whatsapp.controller.ts).
+// Every snippet here must match the real backend (server/src/whatsapp/whatsapp.controller.ts).
 // Tab ids double as language ids so all language tabs on the page switch together.
 
 const EXAMPLE_PHONE = '+8801712345678';

@@ -6,7 +6,7 @@ import { renderOtpBody } from '@/utils/otpTemplate';
 import type { OtpTemplateContent } from '@/types/types';
 
 // A realistic WhatsApp (Android, light theme) chat showing the OTP message exactly as the
-// backend sends it (backend/src/whatsapp/template/template.ts): the default message, or a
+// backend sends it (server/src/whatsapp/template/template.ts): the default message, or a
 // user's custom OTP template. Numbered markers line up with the legend on the docs page.
 
 const WA = {

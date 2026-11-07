@@ -63,7 +63,7 @@ This frontend departs from generic SaaS dashboard templates by implementing a di
 ## 📁 Directory Structure
 
 ```text
-frontend/
+web/
 ├── public/                 # Static assets, favicon, icons
 ├── src/
 │   ├── app/                # Next.js 16 App Router
@@ -94,7 +94,7 @@ frontend/
 
 ## ⚙️ Environment Configuration
 
-Create a `.env.local` file in the `frontend/` directory:
+Create a `.env.local` file in the `web/` directory:
 
 ```bash
 # Backend Gateway API Base URL
@@ -111,14 +111,14 @@ NEXT_PUBLIC_API_URL=http://localhost:3002
 
 ### Prerequisites
 * **Node.js**: `v20.x`, `v22.x`, or `v24.x`
-* **npm**: `v9.x` or higher
+* **pnpm**: `v12.x` or higher
 * **Running Backend**: Ensure the NestJS backend gateway is running on port `3002`.
 
 ### Installation & Run
 
 1. **Install dependencies**:
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Configure environment**:
@@ -128,7 +128,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3002
 
 3. **Start the development server**:
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 4. **Access the Application**:
@@ -141,15 +141,15 @@ NEXT_PUBLIC_API_URL=http://localhost:3002
 
 ## 📦 Available Scripts
 
-* `npm run dev` — Launch Next.js development server with Turbopack / HMR at `http://localhost:3000`
-* `npm run build` — Create an optimized production build
-* `npm run start` — Start the production server
-* `npm run lint` — Run ESLint checks across the codebase
+* `pnpm dev` — Launch Next.js development server with Turbopack / HMR at `http://localhost:3000`
+* `pnpm build` — Create an optimized production build
+* `pnpm start` — Start the production server
+* `pnpm lint` — Run ESLint checks across the codebase
 
 ---
 
 ## 🔗 Related Documentation
 
-* **Backend Service**: [`../backend/README.md`](../backend/README.md)
-* **Complete REST API Specification**: [`../backend/docs/API.md`](../backend/docs/API.md)
+* **Backend Service**: [`../server/README.md`](../server/README.md)
+* **Complete REST API Specification**: [`../server/docs/API.md`](../server/docs/API.md)
 * **Editorial Design System**: [`./DESIGN.md`](./DESIGN.md)

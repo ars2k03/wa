@@ -8,7 +8,7 @@ Built with **NestJS 12**, **Baileys (WebSockets)**, **Prisma ORM**, **PostgreSQL
 
 ## 📖 Quick Links
 - **Full API Documentation**: [`docs/API.md`](./docs/API.md) *(Endpoints, Request/Response JSON, and cURL workflows)*
-- **Frontend Console Guide**: [`../frontend/README.md`](../frontend/README.md) *(Operator dashboard & UI)*
+- **Frontend Console Guide**: [`../web/README.md`](../web/README.md) *(Operator dashboard & UI)*
 
 ---
 
@@ -58,18 +58,18 @@ GMAIL_REFRESH_TOKEN="your-google-refresh-token"
 
 ```bash
 # 1. Install dependencies
-npm install
+pnpm install
 
 # 2. Generate Prisma Client & apply database migrations
-npm run prisma:generate
-npm run prisma:migrate
+pnpm prisma:generate
+pnpm prisma:migrate
 
 # 3. Start development server with file watch (also runs prisma generate)
-npm run start:dev
+pnpm start:dev
 
 # 4. Production build & start
-npm run build
-npm run start:prod
+pnpm build
+pnpm start:prod
 ```
 
 Once running, the backend listens at `http://localhost:3002`.
@@ -80,11 +80,11 @@ Once running, the backend listens at `http://localhost:3002`.
 
 ```bash
 # Run tests with Vitest
-npm run test
+pnpm test
 
 # Run e2e tests
-npm run test:e2e
+pnpm test:e2e
 
 # Run linter
-npm run lint
+pnpm lint
 ```
