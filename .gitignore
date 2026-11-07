@@ -2,5 +2,9 @@ node_modules
 .turbo
 .DS_Store
 
+# Secrets: only example env files are committed
+.env*
+!.env.example
+
 # Large binary assets stay out of git history
 marketing/*.mp4
