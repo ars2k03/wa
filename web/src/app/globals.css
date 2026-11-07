@@ -1,0 +1,204 @@
+@import "tailwindcss";
+
+:root {
+  /* Paper & Ink Tokens */
+  --background: #fbf8f1;
+  --foreground: #1a1a1a;
+  --paper-cream: #fbf8f1;
+  --paper-tint: #f4efe2;
+  --paper-border: #1a1a1a;
+  --ink-primary: #1a1a1a;
+  --ink-muted: #524d43;
+
+  /* Vintage Editorial Accents */
+  --accent-burgundy: #7a2020;
+  --accent-emerald: #2e6930;
+  --accent-amber: #b45309;
+
+  --font-serif: Georgia, Baskerville, "Times New Roman", Garamond, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Keep scrollbar space reserved so locking scroll (modals) doesn't shift the page */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Editorial Brutalist Utilities */
+.font-headline {
+  font-family: var(--font-serif);
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+}
+
+/* Brutalist Hard Shadow Box */
+.brutalist-card {
+  background-color: #fbf8f1;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0px #1a1a1a;
+}
+
+.brutalist-card-sm {
+  background-color: #fbf8f1;
+  border: 2px solid #1a1a1a;
+  box-shadow: 2px 2px 0px #1a1a1a;
+}
+
+.brutalist-card-tint {
+  background-color: #f4efe2;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0px #1a1a1a;
+}
+
+/* Tactile Press Buttons */
+.btn-retro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid #1a1a1a;
+  background-color: #f4efe2;
+  color: #1a1a1a;
+  box-shadow: 3px 3px 0px #1a1a1a;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-retro:hover:not(:disabled) {
+  background-color: #ede5d3;
+}
+
+.btn-retro:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #1a1a1a;
+}
+
+.btn-retro:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.btn-retro-primary {
+  background-color: #7a2020;
+  color: #fbf8f1;
+}
+
+.btn-retro-primary:hover:not(:disabled) {
+  background-color: #611818;
+}
+
+.btn-retro-emerald {
+  background-color: #2e6930;
+  color: #fbf8f1;
+}
+
+.btn-retro-emerald:hover:not(:disabled) {
+  background-color: #245226;
+}
+
+.btn-retro-dark {
+  background-color: #1a1a1a;
+  color: #fbf8f1;
+}
+
+.btn-retro-dark:hover:not(:disabled) {
+  background-color: #333333;
+}
+
+/* Vintage Official Stamps */
+.stamp-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem;
+  border: 2px solid #1a1a1a;
+  border-radius: 2px;
+}
+
+.stamp-green {
+  border-color: #2e6930;
+  color: #2e6930;
+  background-color: #eaf3eb;
+}
+
+.stamp-burgundy {
+  border-color: #7a2020;
+  color: #7a2020;
+  background-color: #fae8e8;
+}
+
+.stamp-amber {
+  border-color: #b45309;
+  color: #b45309;
+  background-color: #fef3c7;
+}
+
+/* Ruled Newspaper Lines */
+.double-ruled {
+  border-top: 3px double #1a1a1a;
+}
+
+.single-ruled {
+  border-top: 1px solid #1a1a1a;
+}
+
+.column-border-right {
+  border-right: 1px solid #1a1a1a;
+}
+
+/* Scrollable code blocks (docs) */
+.code-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #a39e93 #2a2a2a;
+  background:
+    linear-gradient(#1a1a1a 30%, rgba(26, 26, 26, 0)) center top,
+    linear-gradient(rgba(26, 26, 26, 0), #1a1a1a 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, rgba(251, 248, 241, 0.16), rgba(251, 248, 241, 0)) center top,
+    radial-gradient(farthest-side at 50% 100%, rgba(251, 248, 241, 0.16), rgba(251, 248, 241, 0)) center bottom;
+  background-color: #1a1a1a;
+  background-repeat: no-repeat;
+  background-size: 100% 40px, 100% 40px, 100% 18px, 100% 18px;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.code-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.code-scroll::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.code-scroll::-webkit-scrollbar-thumb {
+  background: #a39e93;
+  border: 2px solid #2a2a2a;
+}
+
+.code-scroll::-webkit-scrollbar-thumb:hover {
+  background: #fbf8f1;
+}
+
+.code-scroll::-webkit-scrollbar-corner {
+  background: #2a2a2a;
+}
+
