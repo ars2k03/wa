@@ -2,6 +2,9 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
+  "description": "WA Gateway website and developer dashboard",
+  "author": "A R S Arafat",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

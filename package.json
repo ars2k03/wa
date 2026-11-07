@@ -1,12 +1,26 @@
 {
   "name": "whatsapp",
   "private": true,
-  "packageManager": "pnpm@12.18.0",
+  "description": "Self-hosted WhatsApp OTP gateway with a REST API and developer dashboard",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test"
+  },
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "MIT",
+  "author": "A R S Arafat",
+  "homepage": "https://wa.ars2k03.tech",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ars2k03/whatsapp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ars2k03/whatsapp/issues"
   },
   "devDependencies": {
     "turbo": "2.11.10"
