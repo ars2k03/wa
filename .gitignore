@@ -1,0 +1,6 @@
+node_modules
+.turbo
+.DS_Store
+
+# Large binary assets stay out of git history
+marketing/*.mp4
