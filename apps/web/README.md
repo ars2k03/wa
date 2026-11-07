@@ -63,7 +63,7 @@ This frontend departs from generic SaaS dashboard templates by implementing a di
 ## 📁 Directory Structure
 
 ```text
-web/
+apps/web/
 ├── public/                 # Static assets, favicon, icons
 ├── src/
 │   ├── app/                # Next.js 16 App Router
@@ -94,7 +94,7 @@ web/
 
 ## ⚙️ Environment Configuration
 
-Create a `.env.local` file in the `web/` directory:
+Create a `.env.local` file in the `apps/web/` directory:
 
 ```bash
 # Backend Gateway API Base URL

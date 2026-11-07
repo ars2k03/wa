@@ -1,6 +1,6 @@
 import type { OtpTemplateContent } from '@/types/types';
 
-// Mirrors server/src/otp_template/otp_template.constants.ts and the checks in
+// Mirrors apps/server/src/otp_template/otp_template.constants.ts and the checks in
 // otp_template.service.ts, so the editor flags problems before the server does.
 
 const CODE_PLACEHOLDER = /\{\{\s*code\s*\}\}/g;

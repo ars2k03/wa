@@ -1,6 +1,5 @@
 packages:
-  - server
-  - web
+  - apps/*
 allowBuilds:
   '@prisma/engines': true
   baileys: false

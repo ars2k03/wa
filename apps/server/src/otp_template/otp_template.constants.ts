@@ -1,4 +1,4 @@
-// Keep in sync with web/src/utils/otpTemplate.ts (editor validation and preview).
+// Keep in sync with apps/web/src/utils/otpTemplate.ts (editor validation and preview).
 
 /** The only placeholder allowed in an OTP template, e.g. {{code}} or {{ code }} */
 export const CODE_PLACEHOLDER = /\{\{\s*code\s*\}\}/g;

@@ -31,7 +31,7 @@ function buildCommand(apiUrl: string, phone: string, otp: string): Seg[] {
   ];
 }
 
-// Mirrors the backend's POST /send-otp response (see server/src/whatsapp/whatsapp.controller.ts).
+// Mirrors the backend's POST /send-otp response (see apps/server/src/whatsapp/whatsapp.controller.ts).
 function buildResponse(phone: string, messageId: string): string[] {
   return JSON.stringify(
     {
