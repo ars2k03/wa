@@ -27,6 +27,7 @@ Comprehensive REST API documentation for the **WhatsApp OTP Gateway** backend se
 
 ## Overview & Base URL
 
+* **Production Base URL:** `https://wapi.ars2k03.tech`
 * **Default Local Base URL:** `http://localhost:3002`
 * **Default Port:** `3002` (configurable via `PORT` in `.env`)
 * **Data Format:** `application/json`
@@ -710,7 +711,7 @@ Returns how many OTPs you have sent today and this month, your limits, when they
 
 ## End-to-End Workflow Example
 
-Follow this step-by-step sequence to get started:
+Follow this step-by-step sequence to get started (replace `http://localhost:3002` with `https://wapi.ars2k03.tech` in production):
 
 ### Step 1: Register an Account
 ```bash

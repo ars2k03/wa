@@ -116,7 +116,7 @@ You need Node.js 24 or newer, pnpm 12, PostgreSQL, Redis and a Google OAuth2 cli
    pnpm --filter server dev
    ```
 
-The API runs at <http://localhost:3002>.
+The API runs at <http://localhost:3002> in development, and the live production API is hosted at <https://wapi.ars2k03.tech>.
 
 ## Scripts
 

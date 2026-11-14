@@ -64,7 +64,11 @@ const FAQ = [
 ];
 
 export default function DocsPage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+  const apiUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://wapi.ars2k03.tech'
+      : 'http://localhost:3002');
   const sendOtp = sendOtpSnippets(apiUrl);
 
   return (

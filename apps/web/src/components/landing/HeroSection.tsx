@@ -7,7 +7,11 @@ import { Badge } from '../ui/Badge';
 import { TerminalDemo } from './TerminalDemo';
 
 export function HeroSection() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+  const apiUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://wapi.ars2k03.tech'
+      : 'http://localhost:3002');
 
   return (
     <section className="relative border-b-2 border-[#1a1a1a] bg-[#fbf8f1] px-4 py-12 md:py-18">

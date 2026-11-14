@@ -19,7 +19,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-[**Live site**](https://wa.ars2k03.tech) · [**Docs**](https://wa.ars2k03.tech/docs) · [**API reference**](apps/server/docs/API.md) · [**Getting started**](#getting-started) · [**Contributing**](CONTRIBUTING.md)
+[**Live site**](https://wa.ars2k03.tech) · [**API endpoint**](https://wapi.ars2k03.tech) · [**Docs**](https://wa.ars2k03.tech/docs) · [**API reference**](apps/server/docs/API.md) · [**Getting started**](#getting-started) · [**Contributing**](CONTRIBUTING.md)
 
 </div>
 
@@ -78,10 +78,10 @@ flowchart LR
 
 ## Apps
 
-| App | Path | Stack | Dev port |
-|---|---|---|---|
-| **REST API** | [`apps/server`](apps/server) | NestJS 12, Baileys, Prisma 7, PostgreSQL, Redis | `3002` |
-| **Website and dashboard** | [`apps/web`](apps/web) | Next.js 16, React 19, Tailwind CSS 4 | `3000` |
+| App | Path | Stack | Dev port | Production URL |
+|---|---|---|---|---|
+| **REST API** | [`apps/server`](apps/server) | NestJS 12, Baileys, Prisma 7, PostgreSQL, Redis | `3002` | `https://wapi.ars2k03.tech` |
+| **Website and dashboard** | [`apps/web`](apps/web) | Next.js 16, React 19, Tailwind CSS 4 | `3000` | `https://wa.ars2k03.tech` |
 
 Each app has its own README with more detail.
 

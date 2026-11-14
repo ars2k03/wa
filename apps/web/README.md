@@ -92,7 +92,7 @@ You need Node.js 24 or newer, pnpm 12 and a running [server](../server/README.md
 
    | Variable | Description |
    |---|---|
-   | `NEXT_PUBLIC_API_URL` | Server URL, `http://localhost:3002` by default |
+   | `NEXT_PUBLIC_API_URL` | Server URL (`http://localhost:3002` locally, `https://wapi.ars2k03.tech` in production) |
 
 3. Start the development server:
    ```bash
